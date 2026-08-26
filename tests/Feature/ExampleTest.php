@@ -7,13 +7,19 @@ use Tests\TestCase;
 
 class ExampleTest extends TestCase
 {
-    /**
-     * A basic test example.
-     */
-    public function test_the_application_returns_a_successful_response(): void
+    public function test_owner_overview_displays_the_primary_business_signals(): void
     {
         $response = $this->get('/');
 
-        $response->assertStatus(200);
+        $response
+            ->assertOk()
+            ->assertSeeText('Bisnis Anda tumbuh dengan baik hari ini.')
+            ->assertSeeText('Business Health')
+            ->assertSeeText('Rp24,8 jt')
+            ->assertSeeText('Sales Performance')
+            ->assertSeeText('NADI Insights')
+            ->assertSeeText('Team Performance')
+            ->assertSeeText('Needs Your Attention')
+            ->assertSeeText('Ask NADI');
     }
 }

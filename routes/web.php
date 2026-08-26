@@ -1,7 +1,6 @@
 <?php
 
+use App\Http\Controllers\OwnerOverviewController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', OwnerOverviewController::class)->name('overview');
