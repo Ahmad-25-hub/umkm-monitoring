@@ -31,6 +31,10 @@
             <button type="button" class="sidebar-close" data-sidebar-close aria-label="Close navigation">
                 <i data-lucide="x" aria-hidden="true"></i>
             </button>
+
+            <button type="button" class="sidebar-collapse" data-sidebar-collapse aria-label="Collapse navigation" aria-expanded="true">
+                <i data-lucide="chevrons-left" aria-hidden="true"></i>
+            </button>
         </div>
 
         <nav class="flex min-h-0 flex-1 flex-col px-4 pb-5 pt-7">
@@ -40,6 +44,7 @@
                     <li>
                         <a
                             href="{{ $item['active'] ?? false ? route('overview') : '#' }}"
+                            title="{{ $item['label'] }}"
                             @class(['nav-item', 'is-active' => $item['active'] ?? false])
                             @if (! ($item['active'] ?? false)) aria-disabled="true" @endif
                         >
@@ -65,13 +70,21 @@
                 <ul class="mt-5 space-y-1 border-t border-white/[0.07] pt-4">
                     @foreach ($secondaryNavigation as $item)
                         <li>
-                            <a href="#" class="nav-item" aria-disabled="true">
+                            <a href="#" class="nav-item" aria-disabled="true" title="{{ $item['label'] }}">
                                 <i data-lucide="{{ $item['icon'] }}" aria-hidden="true"></i>
                                 <span>{{ $item['label'] }}</span>
                             </a>
                         </li>
                     @endforeach
                 </ul>
+
+                <form method="POST" action="{{ route('logout') }}" class="mt-1">
+                    @csrf
+                    <button type="submit" class="nav-item w-full" title="Keluar">
+                        <i data-lucide="log-out" aria-hidden="true"></i>
+                        <span>Keluar</span>
+                    </button>
+                </form>
             </div>
         </nav>
     </div>

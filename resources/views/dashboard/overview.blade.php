@@ -3,7 +3,7 @@
     :businesses="$businesses"
     :active-business-id="$activeBusinessId"
 >
-    <div class="space-y-8 lg:space-y-10">
+    <div class="dashboard-sections">
         <section class="overview-toolbar" aria-label="Periode ringkasan">
             <div class="eyebrow">
                 <span class="status-dot" aria-hidden="true"></span>
@@ -23,6 +23,8 @@
             />
         </section>
 
+        <x-dashboard.invitation-code-card :business="$activeBusiness" />
+
         <section aria-labelledby="metrics-heading">
             <div class="section-heading-row">
                 <div>
@@ -32,24 +34,43 @@
                 <span class="section-meta">Diperbarui 10 menit lalu</span>
             </div>
 
-            <div class="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                @foreach ($metrics as $metric)
-                    <x-dashboard.metric-card :metric="$metric" />
-                @endforeach
+            <div class="metrics-grid mt-5">
+                @if ($isLoading)
+                    @for ($card = 0; $card < 4; $card++)
+                        <x-dashboard.loading-state variant="kpi" />
+                    @endfor
+                @elseif (count($metrics))
+                    @foreach ($metrics as $metric)
+                        <x-dashboard.metric-card :metric="$metric" />
+                    @endforeach
+                @else
+                    <div class="panel metrics-empty">
+                        <x-dashboard.empty-state
+                            icon="chart-no-axes-combined"
+                            title="Belum ada ringkasan bisnis"
+                            description="Hubungkan data penjualan untuk mulai melihat metrik utama bisnis Anda."
+                            action="Hubungkan data penjualan"
+                            compact
+                        />
+                    </div>
+                @endif
             </div>
         </section>
 
-        <section aria-label="Performa penjualan">
-            <x-dashboard.sales-chart :sales="$sales" />
+        <section aria-label="Hal yang perlu diperhatikan">
+            <x-dashboard.alert-card :alerts="$alerts" :loading="$isLoading" />
         </section>
 
         <section aria-label="Insight NADI">
-            <x-dashboard.insight-card :insights="$insights" />
+            <x-dashboard.insight-card :insights="$insights" :loading="$isLoading" />
         </section>
 
-        <section class="dashboard-grid" aria-label="Performa tim dan perhatian bisnis">
-            <x-dashboard.employee-performance :employees="$employees" class="lg:col-span-7" />
-            <x-dashboard.alert-card :alerts="$alerts" class="lg:col-span-5" />
+        <section aria-label="Performa tim">
+            <x-dashboard.employee-performance :employees="$employees" :loading="$isLoading" />
+        </section>
+
+        <section aria-label="Analitik penjualan terperinci">
+            <x-dashboard.sales-chart :sales="$sales" :loading="$isLoading" />
         </section>
 
         <section aria-label="Tanya NADI">

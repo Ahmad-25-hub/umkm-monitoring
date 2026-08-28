@@ -2,7 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Business;
+use App\Models\BusinessMembership;
+use App\Models\User;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class OwnerOverviewController extends Controller
 {
@@ -12,20 +17,40 @@ class OwnerOverviewController extends Controller
      * These values form a small presentation contract that can later be
      * replaced by authenticated owner and business context services.
      */
-    public function __invoke(): View
+    public function __invoke(Request $request): View
     {
-        return view('dashboard.overview', [
+        /** @var User $user */
+        $user = $request->user();
+        /** @var Business $activeBusiness */
+        $activeBusiness = $request->attributes->get('activeBusiness');
+        $activeMemberships = $request->attributes->get('activeBusinessMemberships');
+        $activeBusiness->loadMissing('invitationCode');
+
+        $ownerInitials = Str::of($user->name)
+            ->squish()
+            ->explode(' ')
+            ->filter()
+            ->take(2)
+            ->map(fn (string $part): string => Str::upper(Str::substr($part, 0, 1)))
+            ->implode('');
+
+        $data = [
             'owner' => [
-                'name' => 'Ahmad',
-                'initials' => 'AH',
+                'name' => $user->name,
+                'initials' => $ownerInitials,
             ],
-            'businesses' => [
-                ['id' => 'baytmart', 'name' => 'BaytMart Store', 'location' => 'Main branch'],
-                ['id' => 'baytmart-west', 'name' => 'BaytMart West', 'location' => 'West branch'],
-            ],
-            'activeBusinessId' => 'baytmart',
+            'businesses' => $activeMemberships
+                ->map(fn (BusinessMembership $membership): array => [
+                    'id' => $membership->business_id,
+                    'name' => $membership->business->name,
+                    'location' => $membership->role === BusinessMembership::ROLE_OWNER ? 'Pemilik' : 'Karyawan',
+                ])
+                ->values()
+                ->all(),
+            'activeBusinessId' => $activeBusiness->id,
+            'activeBusiness' => $activeBusiness,
             'overview' => [
-                'dateLabel' => 'Rabu, 26 Agustus 2026',
+                'dateLabel' => 'Kamis, 27 Agustus 2026',
                 'headline' => 'Bisnis Anda tumbuh dengan baik hari ini.',
                 'summary' => 'Pendapatan naik 12,4% dibandingkan bulan lalu, didorong oleh peningkatan transaksi pada akhir pekan.',
                 'health' => [
@@ -107,6 +132,18 @@ class OwnerOverviewController extends Controller
                 'Apa yang perlu saya prioritaskan hari ini?',
                 'Prediksi penjualan bulan depan',
             ],
-        ]);
+        ];
+
+        $data['isLoading'] = $request->boolean('loading');
+
+        if ($request->string('state')->toString() === 'empty') {
+            $data['metrics'] = [];
+            $data['sales']['periods'] = [];
+            $data['insights'] = [];
+            $data['employees'] = [];
+            $data['alerts'] = [];
+        }
+
+        return view('dashboard.overview', $data);
     }
 }

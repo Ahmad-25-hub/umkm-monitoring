@@ -11,14 +11,18 @@ import {
     ChartNoAxesCombined,
     Check,
     ChevronDown,
+    ChevronsLeft,
     ChevronsUpDown,
     CircleHelp,
     Clock3,
     ContactRound,
+    Copy,
     createIcons,
+    DatabaseZap,
     FileChartColumn,
     LayoutDashboard,
     Lightbulb,
+    LogOut,
     Menu,
     Package,
     PackageX,
@@ -49,13 +53,17 @@ const icons = {
     ChartNoAxesCombined,
     Check,
     ChevronDown,
+    ChevronsLeft,
     ChevronsUpDown,
     CircleHelp,
     Clock3,
     ContactRound,
+    Copy,
+    DatabaseZap,
     FileChartColumn,
     LayoutDashboard,
     Lightbulb,
+    LogOut,
     Menu,
     Package,
     PackageX,
@@ -80,6 +88,7 @@ const initializeIcons = () => {
 const initializeSidebar = () => {
     const openButton = document.querySelector('[data-sidebar-open]');
     const closeButtons = document.querySelectorAll('[data-sidebar-close]');
+    const collapseButton = document.querySelector('[data-sidebar-collapse]');
     const sidebar = document.querySelector('#dashboard-sidebar');
 
     if (! openButton || ! sidebar) {
@@ -101,6 +110,11 @@ const initializeSidebar = () => {
     openButton.setAttribute('aria-expanded', 'false');
     openButton.addEventListener('click', open);
     closeButtons.forEach((button) => button.addEventListener('click', close));
+    collapseButton?.addEventListener('click', () => {
+        const collapsed = document.body.classList.toggle('sidebar-collapsed');
+        collapseButton.setAttribute('aria-expanded', String(! collapsed));
+        collapseButton.setAttribute('aria-label', collapsed ? 'Expand navigation' : 'Collapse navigation');
+    });
 
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && document.body.classList.contains('sidebar-open')) {
@@ -134,6 +148,49 @@ const initializeBusinessMenu = () => {
     document.addEventListener('click', (event) => {
         if (! selector.contains(event.target)) {
             selector.removeAttribute('open');
+        }
+    });
+};
+
+const initializeNotificationCenter = () => {
+    const center = document.querySelector('.notification-center');
+    const toggle = center?.querySelector('[data-notification-toggle]');
+    const menu = center?.querySelector('[data-notification-menu]');
+    const markRead = center?.querySelector('[data-mark-notifications-read]');
+
+    if (! center || ! toggle || ! menu) {
+        return;
+    }
+
+    const close = () => {
+        menu.hidden = true;
+        toggle.setAttribute('aria-expanded', 'false');
+    };
+
+    toggle.addEventListener('click', () => {
+        const willOpen = menu.hidden;
+        menu.hidden = ! willOpen;
+        toggle.setAttribute('aria-expanded', String(willOpen));
+        document.querySelector('.business-selector')?.removeAttribute('open');
+    });
+
+    markRead?.addEventListener('click', () => {
+        center.querySelectorAll('.notification-item').forEach((item) => item.classList.remove('is-unread'));
+        center.querySelector('[data-notification-dot]')?.remove();
+        center.querySelector('[data-notification-count]').textContent = 'Semua sudah dibaca';
+        toggle.setAttribute('aria-label', 'Buka notifikasi');
+    });
+
+    document.addEventListener('click', (event) => {
+        if (! center.contains(event.target)) {
+            close();
+        }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && ! menu.hidden) {
+            close();
+            toggle.focus();
         }
     });
 };
@@ -205,7 +262,7 @@ const chartPoints = (values, max, bounds) => values.map((value, index) => [
     bounds.bottom - (value / max) * (bounds.bottom - bounds.top),
 ]);
 
-const renderSalesChart = (canvas, period) => {
+const renderSalesChart = (canvas, period, hoverIndex = null) => {
     const { context, width, height } = prepareCanvas(canvas);
     const bounds = { left: 48, right: width - 46, top: 16, bottom: height - 34 };
     const revenueMax = Math.ceil(Math.max(...period.revenue) * 1.22);
@@ -267,6 +324,30 @@ const renderSalesChart = (canvas, period) => {
         const x = bounds.left + (index / Math.max(period.labels.length - 1, 1)) * (bounds.right - bounds.left);
         context.fillText(label, x, height - 5);
     });
+
+    if (hoverIndex !== null) {
+        const [hoverX, revenueY] = revenuePoints[hoverIndex];
+        const [, transactionY] = transactionPoints[hoverIndex];
+
+        context.beginPath();
+        context.moveTo(hoverX, bounds.top);
+        context.lineTo(hoverX, bounds.bottom);
+        context.strokeStyle = 'rgba(105,115,111,.24)';
+        context.lineWidth = 1;
+        context.stroke();
+
+        [[revenueY, '#2f8b68'], [transactionY, '#69736f']].forEach(([y, color]) => {
+            context.beginPath();
+            context.arc(hoverX, y, 4, 0, Math.PI * 2);
+            context.fillStyle = '#ffffff';
+            context.fill();
+            context.strokeStyle = color;
+            context.lineWidth = 2.2;
+            context.stroke();
+        });
+    }
+
+    return { bounds, revenuePoints, transactionPoints };
 };
 
 const initializeSalesChart = () => {
@@ -278,9 +359,11 @@ const initializeSalesChart = () => {
 
     const periods = JSON.parse(chart.dataset.periods);
     const canvas = chart.querySelector('[data-sales-canvas]');
+    const tooltip = chart.querySelector('[data-chart-tooltip]');
+    const chartToggle = chart.querySelector('[data-chart-toggle]');
     let currentPeriod = chart.dataset.defaultPeriod;
 
-    const render = () => renderSalesChart(canvas, periods[currentPeriod]);
+    const render = (hoverIndex = null) => renderSalesChart(canvas, periods[currentPeriod], hoverIndex);
     const selectPeriod = (key) => {
         currentPeriod = key;
         const period = periods[key];
@@ -292,6 +375,7 @@ const initializeSalesChart = () => {
         chart.querySelector('[data-revenue-change]').textContent = period.revenueChange;
         chart.querySelector('[data-transaction-total]').textContent = period.transactionTotal;
         chart.querySelector('[data-transaction-change]').textContent = period.transactionChange;
+        tooltip.hidden = true;
         render();
     };
 
@@ -299,8 +383,47 @@ const initializeSalesChart = () => {
         button.addEventListener('click', () => selectPeriod(button.dataset.chartPeriod));
     });
 
+    chartToggle?.addEventListener('click', () => {
+        const expanded = chart.classList.toggle('chart-expanded');
+        chartToggle.setAttribute('aria-expanded', String(expanded));
+        chartToggle.querySelector('span').textContent = expanded ? 'Sembunyikan grafik' : 'Lihat grafik lengkap';
+        window.requestAnimationFrame(() => render());
+    });
+
+    canvas.addEventListener('pointermove', (event) => {
+        const period = periods[currentPeriod];
+        const bounds = canvas.getBoundingClientRect();
+        const pointerX = event.clientX - bounds.left;
+        const plotLeft = 48;
+        const plotRight = bounds.width - 46;
+
+        if (pointerX < plotLeft || pointerX > plotRight) {
+            tooltip.hidden = true;
+            render();
+            return;
+        }
+
+        const ratio = (pointerX - plotLeft) / Math.max(plotRight - plotLeft, 1);
+        const index = Math.max(0, Math.min(period.labels.length - 1, Math.round(ratio * (period.labels.length - 1))));
+        const state = render(index);
+        const x = state.revenuePoints[index][0];
+        const y = Math.min(state.revenuePoints[index][1], state.transactionPoints[index][1]);
+
+        tooltip.querySelector('[data-tooltip-label]').textContent = period.labels[index];
+        tooltip.querySelector('[data-tooltip-revenue]').textContent = `Rp${period.revenue[index].toLocaleString('id-ID')} jt`;
+        tooltip.querySelector('[data-tooltip-transactions]').textContent = `${period.transactions[index].toLocaleString('id-ID')} transaksi`;
+        tooltip.style.left = `${x}px`;
+        tooltip.style.top = `${Math.max(y, 72)}px`;
+        tooltip.hidden = false;
+    });
+
+    canvas.addEventListener('pointerleave', () => {
+        tooltip.hidden = true;
+        render();
+    });
+
     render();
-    new ResizeObserver(render).observe(canvas.parentElement);
+    new ResizeObserver(() => render()).observe(canvas.parentElement);
 };
 
 const initializeAiSuggestions = () => {
@@ -318,12 +441,32 @@ const initializeAiSuggestions = () => {
     });
 };
 
+const initializeInvitationCodeCopy = () => {
+    const button = document.querySelector('[data-copy-invitation-code]');
+    const code = document.querySelector('[data-invitation-code]');
+
+    if (! button || ! code) {
+        return;
+    }
+
+    button.addEventListener('click', async () => {
+        try {
+            await navigator.clipboard.writeText(code.textContent.trim());
+            button.querySelector('span').textContent = 'Tersalin';
+        } catch {
+            code.focus?.();
+        }
+    });
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     initializeIcons();
     initializeSidebar();
     initializeSearchShortcut();
     initializeBusinessMenu();
+    initializeNotificationCenter();
     initializeSparklines();
     initializeSalesChart();
     initializeAiSuggestions();
+    initializeInvitationCodeCopy();
 });
