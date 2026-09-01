@@ -31,7 +31,7 @@
                     <p class="section-kicker">Sinyal utama</p>
                     <h2 id="metrics-heading" class="section-heading">Ringkasan hari ini</h2>
                 </div>
-                <span class="section-meta">Diperbarui 10 menit lalu</span>
+                <span class="section-meta">{{ $lastUpdatedLabel }}</span>
             </div>
 
             <div class="metrics-grid mt-5">

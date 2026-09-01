@@ -32,4 +32,14 @@ class Business extends Model
     {
         return $this->hasOne(BusinessInvitationCode::class);
     }
+
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(Task::class);
+    }
+
+    public function salesOrders(): HasMany
+    {
+        return $this->hasMany(SalesOrder::class);
+    }
 }

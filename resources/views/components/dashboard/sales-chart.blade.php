@@ -54,7 +54,7 @@
                         <div><strong data-transaction-total>{{ $default['transactionTotal'] }}</strong><span data-transaction-change>{{ $default['transactionChange'] }}</span></div>
                     </div>
                 </div>
-                <p class="sales-comparison"><i data-lucide="arrow-up-right" aria-hidden="true"></i> dibanding periode sebelumnya</p>
+                <p class="sales-comparison">dibanding periode sebelumnya</p>
             </div>
 
             <button type="button" class="chart-mobile-toggle" data-chart-toggle aria-expanded="false">

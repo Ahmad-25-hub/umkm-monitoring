@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Business;
 use App\Models\BusinessMembership;
+use App\Models\SalesOrder;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
@@ -14,15 +15,23 @@ class ExampleTest extends TestCase
 
     public function test_owner_overview_displays_the_primary_business_signals(): void
     {
-        $this->actingAsOwner();
+        $this->travelTo('2026-09-01 12:00:00');
+        $business = $this->actingAsOwner();
+        SalesOrder::factory()->for($business)->count(2)->sequence(
+            ['platform_order_id' => 'overview-order-1', 'order_amount' => 25_000, 'net_sales_amount' => 25_000],
+            ['platform_order_id' => 'overview-order-2', 'order_amount' => 50_000, 'net_sales_amount' => 50_000],
+        )->create([
+            'ordered_on' => '2026-09-01',
+            'ordered_at' => '2026-09-01 05:00:00',
+        ]);
 
         $response = $this->get('/');
 
         $response
             ->assertOk()
-            ->assertSeeText('Bisnis Anda tumbuh dengan baik hari ini.')
-            ->assertSeeText('Business Health')
-            ->assertSeeText('Rp24,8 jt')
+            ->assertSeeText('Penjualan hari ini sudah tercatat.')
+            ->assertSeeText('Sinkronisasi Data')
+            ->assertSeeText('Rp75.000')
             ->assertSeeText('Sales Performance')
             ->assertSeeText('NADI Insights')
             ->assertSeeText('Team Performance')
@@ -56,11 +65,11 @@ class ExampleTest extends TestCase
             ->assertSeeText('Belum ada ringkasan bisnis')
             ->assertSeeText('Tidak ada masalah yang membutuhkan perhatian')
             ->assertSeeText('Belum ada insight bisnis')
-            ->assertSeeText('Belum ada data performa karyawan')
+            ->assertSeeText('Belum ada karyawan terdaftar')
             ->assertSeeText('Belum ada riwayat penjualan');
     }
 
-    private function actingAsOwner(): void
+    private function actingAsOwner(): Business
     {
         $owner = User::factory()->create();
         $business = Business::factory()->create();
@@ -70,5 +79,7 @@ class ExampleTest extends TestCase
             ->create();
 
         $this->actingAs($owner);
+
+        return $business;
     }
 }

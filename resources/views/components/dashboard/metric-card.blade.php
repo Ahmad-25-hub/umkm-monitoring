@@ -11,7 +11,11 @@
 
     <div class="mt-4 flex h-10 items-end justify-between gap-4">
         <div class="min-w-0">
-            <span @class(['metric-change', 'is-neutral' => $metric['tone'] === 'neutral'])>
+            <span @class([
+                'metric-change',
+                'is-neutral' => $metric['tone'] === 'neutral',
+                'is-negative' => $metric['tone'] === 'negative',
+            ])>
                 @if ($metric['tone'] === 'positive')
                     <i data-lucide="arrow-up-right" aria-hidden="true"></i>
                 @endif

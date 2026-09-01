@@ -68,4 +68,9 @@
         Belum memiliki akun?
         <a href="{{ route('register') }}" class="font-semibold text-brand-700 hover:text-brand-900">Daftarkan usaha</a>
     </p>
+
+    <p class="mt-3 text-center text-sm text-ink-muted">
+        Anda karyawan?
+        <a href="{{ route('employee.login') }}" class="font-semibold text-brand-700 hover:text-brand-900">Masuk ke ruang karyawan</a>
+    </p>
 @endsection

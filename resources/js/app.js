@@ -459,6 +459,31 @@ const initializeInvitationCodeCopy = () => {
     });
 };
 
+const initializeTaskForm = () => {
+    const form = document.querySelector('[data-task-form]');
+    const typeSelect = form?.querySelector('[data-task-type]');
+
+    if (! form || ! typeSelect) {
+        return;
+    }
+
+    const updateScheduleFields = () => {
+        const isDaily = typeSelect.value === 'daily';
+
+        form.querySelectorAll('[data-daily-field]').forEach((field) => {
+            field.hidden = ! isDaily;
+            field.querySelector('input').disabled = ! isDaily;
+        });
+        form.querySelectorAll('[data-one-time-field]').forEach((field) => {
+            field.hidden = isDaily;
+            field.querySelector('input').disabled = isDaily;
+        });
+    };
+
+    typeSelect.addEventListener('change', updateScheduleFields);
+    updateScheduleFields();
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     initializeIcons();
     initializeSidebar();
@@ -469,4 +494,5 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeSalesChart();
     initializeAiSuggestions();
     initializeInvitationCodeCopy();
+    initializeTaskForm();
 });

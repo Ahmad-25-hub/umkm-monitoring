@@ -1,0 +1,5 @@
+Order ID,Order Status,Order Substatus,Product Name,Variation,Quantity,SKU Subtotal After Discount,Order Refund Amount,Order Amount,Created Time,Paid Time,Cancelled Time,Purchase Channel,Order Channel
+1001,Perlu dikirim,Menunggu pengambilan,Produk A,250 gram,1,11999,0,13937,01/09/2026 08:00:00,01/09/2026 08:01:00,,TikTok,Videos
+1001,Perlu dikirim,Menunggu pengambilan,Produk B,Default,2,5000,0,13937,01/09/2026 08:00:00,01/09/2026 08:01:00,,TikTok,Videos
+1002,Perlu dikirim,Menunggu pengambilan,Produk C,Default,1,20000,0,20000,01/09/2026 09:00:00,01/09/2026 09:01:00,,TikTok,Product cards
+1003,Perlu dikirim,Menunggu pengambilan,Produk D,Default,1,10000,0,10000,31/08/2026 20:00:00,31/08/2026 20:01:00,,TikTok,Videos

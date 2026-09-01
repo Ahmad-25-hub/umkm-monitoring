@@ -4,53 +4,43 @@
     <div class="overview-hero-glow" aria-hidden="true"></div>
     <div class="relative grid min-h-[22rem] items-center gap-10 p-6 sm:p-8 lg:grid-cols-[minmax(0,1.45fr)_minmax(18rem,0.55fr)] lg:p-10">
         <div>
-            <p class="hero-greeting">Good morning, {{ $owner['name'] }} <span aria-hidden="true">👋</span></p>
+            <p class="hero-greeting">Selamat datang, {{ $owner['name'] }} <span aria-hidden="true">👋</span></p>
             <h1 id="overview-title" class="hero-title">{{ $overview['headline'] }}</h1>
             <p class="hero-summary">{{ $overview['summary'] }}</p>
 
             <div class="mt-8 flex flex-wrap gap-3">
-                <div class="hero-signal">
-                    <span class="hero-signal-icon"><i data-lucide="trending-up" aria-hidden="true"></i></span>
-                    <div>
-                        <span class="block text-[0.66rem] font-medium uppercase tracking-[0.09em] text-ink-faint">Momentum</span>
-                        <strong>Positif dan stabil</strong>
+                @foreach ($overview['signals'] as $signal)
+                    <div class="hero-signal">
+                        <span class="hero-signal-icon"><i data-lucide="{{ $signal['icon'] }}" aria-hidden="true"></i></span>
+                        <div>
+                            <span class="block text-[0.66rem] font-medium uppercase tracking-[0.09em] text-ink-faint">{{ $signal['label'] }}</span>
+                            <strong>{{ $signal['value'] }}</strong>
+                        </div>
                     </div>
-                </div>
-                <div class="hero-signal">
-                    <span class="hero-signal-icon"><i data-lucide="shield-check" aria-hidden="true"></i></span>
-                    <div>
-                        <span class="block text-[0.66rem] font-medium uppercase tracking-[0.09em] text-ink-faint">Prioritas</span>
-                        <strong>1 tindakan penting</strong>
-                    </div>
-                </div>
+                @endforeach
             </div>
         </div>
 
         <div class="health-summary-card">
             <div class="flex items-center justify-between gap-4">
                 <div>
-                    <p class="section-kicker text-brand-200">Business Health</p>
-                    <p class="mt-1.5 text-sm font-medium text-white">Kondisi bisnis keseluruhan</p>
+                    <p class="section-kicker text-brand-200">Sinkronisasi Data</p>
+                    <p class="mt-1.5 text-sm font-medium text-white">Status data TikTok Seller</p>
                 </div>
                 <i data-lucide="activity" class="h-5 w-5 text-brand-200" aria-hidden="true"></i>
             </div>
 
             <div class="mt-7 flex items-center gap-6">
-                <div
-                    class="health-score"
-                    style="--score: {{ $overview['health']['score'] }}"
-                    role="img"
-                    aria-label="Business health score {{ $overview['health']['score'] }} dari 100"
-                >
-                    <div class="health-score-inner">
-                        <strong>{{ $overview['health']['score'] }}</strong>
-                        <span>/100</span>
+                <div class="grid h-[7.6rem] w-[7.6rem] shrink-0 place-items-center rounded-full border border-white/10 bg-white/5 text-center shadow-inner" role="img" aria-label="{{ $overview['health']['value'] }} {{ $overview['health']['valueLabel'] }}">
+                    <div>
+                        <strong class="block text-3xl font-medium tracking-[-0.045em] text-white">{{ $overview['health']['value'] }}</strong>
+                        <span class="mt-1 block max-w-20 text-[0.62rem] leading-4 text-white/45">{{ $overview['health']['valueLabel'] }}</span>
                     </div>
                 </div>
                 <div class="min-w-0">
                     <span class="health-status"><span></span>{{ $overview['health']['status'] }}</span>
                     <p class="mt-3 text-xs leading-5 text-white/52">{{ $overview['health']['change'] }}</p>
-                    <p class="mt-1 text-[0.66rem] text-white/32">Berdasarkan penjualan, tim, dan stok</p>
+                    <p class="mt-1 text-[0.66rem] text-white/32">Dihitung dari file yang sudah diproses</p>
                 </div>
             </div>
         </div>

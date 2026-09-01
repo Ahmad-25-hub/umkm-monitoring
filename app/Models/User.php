@@ -31,6 +31,21 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
+    public function createdTasks(): HasMany
+    {
+        return $this->hasMany(Task::class, 'created_by_user_id');
+    }
+
+    public function taskOccurrences(): HasMany
+    {
+        return $this->hasMany(TaskOccurrence::class);
+    }
+
+    public function importedSalesOrders(): HasMany
+    {
+        return $this->hasMany(SalesOrder::class, 'imported_by_user_id');
+    }
+
     public function hasActiveOwnedBusiness(): bool
     {
         return $this->memberships()

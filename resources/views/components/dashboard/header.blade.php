@@ -30,37 +30,26 @@
                 <button
                     type="button"
                     class="icon-button relative"
-                    aria-label="Buka notifikasi, 3 belum dibaca"
+                    aria-label="Buka notifikasi"
                     aria-expanded="false"
                     data-notification-toggle
                 >
                     <i data-lucide="bell" aria-hidden="true"></i>
-                    <span class="notification-dot" data-notification-dot aria-hidden="true"></span>
                 </button>
 
                 <div class="notification-menu" data-notification-menu hidden>
                     <div class="notification-menu-header">
                         <div>
                             <p>Notifikasi</p>
-                            <span data-notification-count>3 belum dibaca</span>
+                            <span data-notification-count>Belum ada notifikasi</span>
                         </div>
-                        <button type="button" data-mark-notifications-read>Tandai sudah dibaca</button>
                     </div>
-                    <div class="notification-list">
-                        <button type="button" class="notification-item is-unread">
-                            <span class="notification-icon is-warning"><i data-lucide="package-x" aria-hidden="true"></i></span>
-                            <span><strong>Stok perlu diperiksa</strong><small>Minyak Goreng 2L diperkirakan habis dalam 2 hari.</small><em>5 menit lalu</em></span>
-                        </button>
-                        <button type="button" class="notification-item is-unread">
-                            <span class="notification-icon is-positive"><i data-lucide="trending-up" aria-hidden="true"></i></span>
-                            <span><strong>Target harian tercapai</strong><small>Pendapatan hari ini sudah mencapai 104% dari target.</small><em>28 menit lalu</em></span>
-                        </button>
-                        <button type="button" class="notification-item is-unread">
-                            <span class="notification-icon is-info"><i data-lucide="clock-3" aria-hidden="true"></i></span>
-                            <span><strong>Ringkasan shift tersedia</strong><small>Performa shift pagi siap untuk ditinjau.</small><em>1 jam lalu</em></span>
-                        </button>
+                    <div class="grid min-h-32 place-items-center px-6 py-8 text-center">
+                        <div>
+                            <span class="mx-auto inline-grid h-10 w-10 place-items-center rounded-xl bg-canvas text-ink-muted"><i data-lucide="bell" class="h-4 w-4" aria-hidden="true"></i></span>
+                            <p class="mt-3 text-xs leading-5 text-ink-muted">Notifikasi akan muncul ketika ada pembaruan nyata yang perlu diperhatikan.</p>
+                        </div>
                     </div>
-                    <button type="button" class="notification-footer">Lihat semua notifikasi <i data-lucide="arrow-right" aria-hidden="true"></i></button>
                 </div>
             </div>
 

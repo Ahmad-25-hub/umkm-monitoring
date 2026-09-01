@@ -1,12 +1,13 @@
 @php
     $primaryNavigation = [
-        ['label' => 'Overview', 'icon' => 'layout-dashboard', 'active' => true],
-        ['label' => 'Sales', 'icon' => 'chart-no-axes-combined'],
-        ['label' => 'Employees', 'icon' => 'users-round'],
-        ['label' => 'Inventory', 'icon' => 'package'],
-        ['label' => 'Customers', 'icon' => 'contact-round'],
-        ['label' => 'Reports', 'icon' => 'file-chart-column'],
-        ['label' => 'AI Insights', 'icon' => 'sparkles'],
+        ['label' => 'Overview', 'icon' => 'layout-dashboard', 'route' => 'overview', 'active' => request()->routeIs('overview')],
+        ['label' => 'Tugas', 'icon' => 'activity', 'route' => 'tasks.index', 'active' => request()->routeIs('tasks.*')],
+        ['label' => 'Monitoring Tugas', 'icon' => 'user-round-check', 'route' => 'task-occurrences.index', 'active' => request()->routeIs('task-occurrences.*')],
+        ['label' => 'Sales', 'icon' => 'chart-no-axes-combined', 'route' => null],
+        ['label' => 'Employees', 'icon' => 'users-round', 'route' => null],
+        ['label' => 'Inventory', 'icon' => 'package', 'route' => null],
+        ['label' => 'Reports', 'icon' => 'file-chart-column', 'route' => null],
+        ['label' => 'AI Insights', 'icon' => 'sparkles', 'route' => null],
     ];
 
     $secondaryNavigation = [
@@ -43,10 +44,10 @@
                 @foreach ($primaryNavigation as $item)
                     <li>
                         <a
-                            href="{{ $item['active'] ?? false ? route('overview') : '#' }}"
+                            href="{{ $item['route'] ? route($item['route']) : '#' }}"
                             title="{{ $item['label'] }}"
                             @class(['nav-item', 'is-active' => $item['active'] ?? false])
-                            @if (! ($item['active'] ?? false)) aria-disabled="true" @endif
+                            @if (! $item['route']) aria-disabled="true" @endif
                         >
                             <i data-lucide="{{ $item['icon'] }}" aria-hidden="true"></i>
                             <span>{{ $item['label'] }}</span>

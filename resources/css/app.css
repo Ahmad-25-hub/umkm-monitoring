@@ -289,6 +289,7 @@
     .metric-value { margin-top: .7rem; font-size: clamp(1.42rem, 2vw, 1.72rem); font-weight: 600; line-height: 1; letter-spacing: -.04em; color: var(--color-ink); }
     .metric-change { display: inline-flex; align-items: center; gap: .2rem; font-size: .66rem; font-weight: 600; color: var(--color-positive); }
     .metric-change.is-neutral { color: var(--color-ink-muted); }
+    .metric-change.is-negative { color: #b94747; }
     .metric-change svg { height: .72rem; width: .72rem; }
     .metric-sparkline { height: 2.25rem; width: 5.75rem; flex: none; }
 

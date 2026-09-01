@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureActiveBusiness;
+use App\Http\Middleware\EnsureActiveEmployeeBusiness;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -13,10 +14,19 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->redirectGuestsTo(fn (Request $request): string => route('login'));
-        $middleware->redirectUsersTo(fn (Request $request): string => route('overview'));
+        $middleware->redirectGuestsTo(
+            fn (Request $request): string => $request->is('employee*')
+                ? route('employee.login')
+                : route('login'),
+        );
+        $middleware->redirectUsersTo(
+            fn (Request $request): string => $request->is('employee*')
+                ? route('employee.dashboard')
+                : route('overview'),
+        );
         $middleware->alias([
             'active.business' => EnsureActiveBusiness::class,
+            'active.employee.business' => EnsureActiveEmployeeBusiness::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

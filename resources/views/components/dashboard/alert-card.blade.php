@@ -39,7 +39,7 @@
             <x-dashboard.empty-state
                 icon="shield-check"
                 title="Tidak ada masalah yang membutuhkan perhatian"
-                description="Semua sinyal bisnis berada dalam batas normal. NADI akan menampilkan prioritas baru di sini."
+                description="Belum ada perhatian otomatis dari data yang tersedia saat ini."
                 compact
             />
         @endif

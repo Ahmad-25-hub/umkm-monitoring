@@ -16,7 +16,7 @@
             <p class="section-kicker">Akses karyawan</p>
             <h2 id="invitation-code-title" class="section-heading">Kode undangan {{ $business->name }}</h2>
             <p class="mt-3 max-w-2xl text-sm leading-6 text-ink-muted">
-                Karyawan akan menggunakan kode ini saat alur pendaftaran karyawan tersedia. Kode ini bukan password bersama.
+                Karyawan menggunakan kode ini saat mendaftar atau bergabung ke usaha. Kode ini bukan password bersama.
             </p>
 
             @if ($plainInvitationCode)
