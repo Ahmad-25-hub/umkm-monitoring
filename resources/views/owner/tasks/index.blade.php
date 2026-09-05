@@ -8,7 +8,7 @@
             <div>
                 <p class="section-kicker">Tim · {{ $activeBusiness->name }}</p>
                 <h1 class="mt-2 text-3xl font-semibold tracking-[-0.04em] text-ink">Manajemen tugas</h1>
-                <p class="mt-2 max-w-2xl text-sm leading-6 text-ink-muted">Atur definisi tugas, penerima, jadwal, dan status aktif dalam satu tempat.</p>
+                <p class="mt-2 max-w-2xl text-sm leading-6 text-ink-muted">Atur pekerjaan, penerima, dan jadwal tim dalam satu tempat.</p>
             </div>
             <div class="flex flex-wrap gap-3">
                 <a href="{{ route('task-occurrences.index') }}" class="inline-flex items-center justify-center gap-2 rounded-xl border border-line-soft bg-white px-4 py-2.5 text-sm font-semibold text-ink transition hover:bg-canvas">
@@ -25,7 +25,7 @@
         <section aria-labelledby="task-list-heading">
             <div class="section-heading-row">
                 <div>
-                    <p class="section-kicker">Definisi tugas</p>
+                    <p class="section-kicker">Pekerjaan tim</p>
                     <h2 id="task-list-heading" class="section-heading">Semua tugas</h2>
                 </div>
                 <span class="section-meta">{{ $tasks->total() }} tugas</span>
@@ -38,14 +38,14 @@
                             <div class="min-w-0">
                                 <div class="flex flex-wrap items-center gap-2">
                                     <span @class([
-                                        'rounded-full px-2.5 py-1 text-[0.68rem] font-semibold',
+                                        'rounded-full px-2.5 py-1 text-xs font-semibold',
                                         'bg-red-50 text-red-700' => $task->priority === \App\TaskPriority::High,
                                         'bg-amber-50 text-amber-700' => $task->priority === \App\TaskPriority::Normal,
                                         'bg-slate-100 text-slate-600' => $task->priority === \App\TaskPriority::Low,
                                     ])>{{ $task->priority->label() }}</span>
-                                    <span class="rounded-full bg-canvas px-2.5 py-1 text-[0.68rem] font-semibold text-ink-muted">{{ $task->type->label() }}</span>
+                                    <span class="rounded-full bg-canvas px-2.5 py-1 text-xs font-semibold text-ink-muted">{{ $task->type->label() }}</span>
                                     <span @class([
-                                        'rounded-full px-2.5 py-1 text-[0.68rem] font-semibold',
+                                        'rounded-full px-2.5 py-1 text-xs font-semibold',
                                         'bg-brand-50 text-brand-700' => $task->is_active,
                                         'bg-slate-100 text-slate-500' => ! $task->is_active,
                                     ])>{{ $task->is_active ? 'Aktif' : 'Nonaktif' }}</span>

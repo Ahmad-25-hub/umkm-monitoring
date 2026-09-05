@@ -5,7 +5,7 @@
 @section('metaDescription', 'Masukkan Kode Usaha untuk bergabung sebagai karyawan.')
 @section('contextKicker', 'Langkah terakhir')
 @section('contextTitle', 'Hubungkan akun Anda dengan usaha yang tepat.')
-@section('contextDescription', 'Kode Usaha memastikan data dan aktivitas Anda hanya masuk ke tenant usaha yang benar.')
+@section('contextDescription', 'Gunakan kode dari pemilik agar akun Anda terhubung dengan usaha yang tepat.')
 @section('contextFooter', 'Kode dapat diperoleh dari pemilik usaha.')
 
 @section('content')

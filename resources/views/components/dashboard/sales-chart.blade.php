@@ -2,8 +2,8 @@
     'sales',
     'loading' => false,
     'class' => '',
-    'kicker' => 'Prioritas #6 · Detailed analytics',
-    'title' => 'Sales Performance',
+    'kicker' => 'Tren usaha',
+    'title' => 'Performa penjualan',
     'description' => 'Gunakan grafik ketika Anda ingin memahami pola di balik ringkasan utama.',
 ])
 
@@ -36,6 +36,7 @@
                         <button
                             type="button"
                             data-chart-period="{{ $key }}"
+                            aria-pressed="{{ $key === $sales['defaultPeriod'] ? 'true' : 'false' }}"
                             @class(['is-active' => $key === $sales['defaultPeriod']])
                         >
                             {{ $period['label'] }}
@@ -81,7 +82,7 @@
             <x-dashboard.empty-state
                 icon="chart-no-axes-combined"
                 title="Belum ada riwayat penjualan"
-                description="Hubungkan POS atau unggah data transaksi untuk melihat tren pendapatan dari waktu ke waktu."
+                description="Tren penjualan akan muncul setelah karyawan mengunggah file pesanan TikTok Seller atau Shopee."
                 action="Hubungkan data penjualan"
             />
         @endif

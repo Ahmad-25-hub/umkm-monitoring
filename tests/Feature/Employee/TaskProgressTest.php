@@ -139,6 +139,34 @@ class TaskProgressTest extends TestCase
             ->assertSeeText('Tugas melewati tenggat');
     }
 
+    public function test_invalid_completion_restores_note_only_on_the_submitted_task(): void
+    {
+        $this->travelTo('2026-09-01 09:00:00');
+        [$business, $owner] = $this->createBusinessWithOwner();
+        $employee = $this->createEmployee($business);
+        $task = Task::factory()->for($business)->for($owner, 'creator')->create();
+        $submittedOccurrence = TaskOccurrence::factory()->for($task)->for($employee, 'assignee')->create();
+        $otherTask = Task::factory()->for($business)->for($owner, 'creator')->create();
+        TaskOccurrence::factory()->for($otherTask)->for($employee, 'assignee')->create();
+        $note = str_repeat('Catatan pekerjaan. ', 120);
+
+        $this->actingAs($employee)
+            ->from(route('employee.dashboard'))
+            ->patch(route('employee.tasks.update', $submittedOccurrence), [
+                'status' => TaskOccurrenceStatus::Completed->value,
+                'employee_note' => $note,
+                'task_occurrence_id' => $submittedOccurrence->id,
+            ])
+            ->assertSessionHasErrors('employee_note');
+
+        $response = $this->get(route('employee.dashboard'));
+
+        $response->assertOk();
+        $this->assertSame(1, substr_count($response->getContent(), e(trim($note))));
+        $this->assertSame(TaskOccurrenceStatus::Pending, $submittedOccurrence->fresh()->status);
+        $this->assertNull($submittedOccurrence->fresh()->employee_note);
+    }
+
     /** @return array{Business, User} */
     private function createBusinessWithOwner(): array
     {

@@ -45,9 +45,10 @@ class DashboardTest extends TestCase
             ->assertSeeText('Tugas Anda hari ini.')
             ->assertSeeText('Usaha Aktif Karyawan')
             ->assertSeeText('Karyawan Nyata')
-            ->assertSeeText('Inventory')
-            ->assertSeeText('Monitoring Inventory')
-            ->assertSeeText('Ringkasan Persediaan & Stok')
+            ->assertSeeText('Unit terjual')
+            ->assertSeeText('Data stok belum tersedia')
+            ->assertDontSeeText('Aman & Terkendali')
+            ->assertDontSeeText('Tidak ada peringatan stok kritis')
             ->assertSeeText('Daftar tugas');
     }
 
@@ -105,7 +106,7 @@ class DashboardTest extends TestCase
             ->withSession(['active_business_id' => $activeBusiness->id])
             ->get(route('overview'))
             ->assertOk()
-            ->assertSeeText('Team Performance')
+            ->assertSeeText('Anggota tim')
             ->assertSeeText('1 dari 1 karyawan aktif')
             ->assertSeeText('Anggota Tenant Aktif')
             ->assertSeeText('aktif@tenant.test')

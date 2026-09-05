@@ -1,37 +1,9 @@
-@props(['suggestions', 'class' => ''])
+@props(['suggestions' => [], 'class' => ''])
 
-<article {{ $attributes->merge(['class' => 'panel ai-panel overflow-hidden '.$class]) }}>
-    <div class="ai-content">
-        <div class="ai-heading">
-            <span class="ai-mark"><i data-lucide="sparkles" aria-hidden="true"></i></span>
-            <div>
-                <div class="flex items-center gap-2">
-                    <p class="text-lg font-semibold tracking-[-0.025em] text-ink">Ask NADI</p>
-                    <span class="ai-beta">Preview</span>
-                </div>
-                <p class="mt-1 text-sm text-ink-muted">Dapatkan jawaban tentang bisnis Anda dalam hitungan detik.</p>
-            </div>
-        </div>
-
-        <div class="ai-input-shell">
-            <i data-lucide="sparkles" aria-hidden="true"></i>
-            <input
-                type="text"
-                placeholder="Tanyakan apa saja tentang bisnis Anda..."
-                data-ai-input
-                aria-describedby="ai-teaser-note"
-            />
-            <button type="button" class="ai-send" aria-label="Kirim pertanyaan" disabled>
-                <i data-lucide="arrow-up" aria-hidden="true"></i>
-            </button>
-        </div>
-
-        <div class="ai-suggestions" aria-label="Contoh pertanyaan">
-            @foreach ($suggestions as $suggestion)
-                <button type="button" data-ai-suggestion="{{ $suggestion }}">{{ $suggestion }}</button>
-            @endforeach
-        </div>
-
-        <p id="ai-teaser-note" class="mt-5 text-[0.68rem] text-ink-faint">Ask NADI sedang dalam tahap preview. Integrasi AI akan tersedia pada fase berikutnya.</p>
+<aside {{ $attributes->merge(['class' => 'flex items-start gap-3 rounded-2xl border border-dashed border-line px-5 py-4 '.$class]) }} aria-label="Pengembangan NADI">
+    <i data-lucide="sparkles" class="mt-0.5 h-5 w-5 shrink-0 text-brand-700" aria-hidden="true"></i>
+    <div>
+        <p class="text-sm font-semibold text-ink">Tanya NADI <span class="ml-2 text-xs font-normal text-ink-muted">Dalam pengembangan</span></p>
+        <p class="mt-1 text-xs leading-5 text-ink-muted">Asisten untuk membantu memahami usaha Anda. Fitur tanya jawab belum tersedia.</p>
     </div>
-</article>
+</aside>

@@ -27,7 +27,8 @@ class ProfileControllerTest extends TestCase
         $response
             ->assertSeeText('Profil Saya')
             ->assertSeeText('Pengaturan Akun')
-            ->assertSeeText('Pengaturan Sistem')
+            ->assertSeeText('Ringkasan')
+            ->assertDontSeeText('Pengaturan Sistem')
             ->assertSee('action="'.route('logout').'"', false);
     }
 

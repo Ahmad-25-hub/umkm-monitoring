@@ -21,7 +21,7 @@
                 @endif
                 {{ $metric['change'] }}
             </span>
-            <p class="mt-1 truncate text-[0.65rem] text-ink-faint">{{ $metric['context'] }}</p>
+            <p class="mt-1 text-xs text-ink-faint">{{ $metric['context'] }}</p>
         </div>
         <canvas
             class="metric-sparkline"

@@ -2,7 +2,7 @@
     'owner' => ['name' => 'Owner', 'initials' => 'OW'],
     'businesses' => [],
     'activeBusinessId' => null,
-    'title' => 'NADI — Owner Overview',
+    'title' => 'Ringkasan Usaha — NADI',
 ])
 
 <!DOCTYPE html>
@@ -10,7 +10,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="description" content="NADI gives business owners a clear view of what is happening and what to do next.">
+        <meta name="description" content="Pantau penjualan, tugas, dan anggota tim usaha Anda bersama NADI.">
         <meta name="theme-color" content="#f5f7f4">
 
         <title>{{ $title }}</title>
@@ -19,6 +19,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="min-h-screen bg-canvas font-sans text-ink antialiased">
+        <a href="#main-content" class="skip-link">Lewati ke konten utama</a>
         <div class="dashboard-frame">
             <x-dashboard.sidebar />
 
@@ -29,7 +30,7 @@
                     :active-business-id="$activeBusinessId"
                 />
 
-                <main id="main-content" class="main-content">
+                <main id="main-content" tabindex="-1" class="main-content">
                     {{ $slot }}
                 </main>
             </div>
@@ -39,7 +40,7 @@
             type="button"
             class="sidebar-backdrop"
             data-sidebar-close
-            aria-label="Close navigation"
+            aria-label="Tutup navigasi"
             tabindex="-1"
         ></button>
     </body>

@@ -6,12 +6,12 @@
     @else
         <div class="panel-heading-row">
             <div>
-                <p class="section-kicker">Prioritas #5 · Your team</p>
-                <h2 class="panel-title mt-1.5">Team Performance</h2>
+                <p class="section-kicker">Bekerja bersama</p>
+                <h2 class="panel-title mt-1.5">Anggota tim</h2>
                 <p class="mt-2 text-xs text-ink-muted">Karyawan yang terdaftar pada usaha aktif saat ini.</p>
             </div>
             @if (count($employees))
-                <button type="button" class="text-link">Lihat semua <i data-lucide="arrow-up-right" aria-hidden="true"></i></button>
+                <a href="{{ route('task-occurrences.index') }}" class="text-link">Pantau tugas <i data-lucide="arrow-up-right" aria-hidden="true"></i></a>
             @endif
         </div>
 
@@ -22,12 +22,12 @@
                         <span class="employee-avatar avatar-{{ $employee['tone'] }}">
                             {{ $employee['initials'] }}
                             @if ($employee['isActive'])
-                                <span class="online-dot" aria-label="Aktif"></span>
+                                <span class="online-dot" aria-label="Keanggotaan aktif"></span>
                             @endif
                         </span>
                         <div class="min-w-0 flex-1">
                             <h3 class="truncate text-sm font-semibold text-ink">{{ $employee['name'] }}</h3>
-                            <p class="mt-1 truncate text-[0.68rem] text-ink-faint">{{ $employee['email'] }}</p>
+                            <p class="mt-1 truncate text-xs text-ink-faint">{{ $employee['email'] }}</p>
                         </div>
                         <div class="employee-score">
                             <p>{{ $employee['joinedAt'] }}</p>
@@ -42,7 +42,7 @@
                 icon="users-round"
                 title="Belum ada karyawan terdaftar"
                 description="Bagikan Kode Usaha agar karyawan dapat bergabung dan tampil pada daftar tim ini."
-                action="Bagikan Kode Usaha"
+                action="Undang karyawan" href="#team-access"
                 compact
             />
         @endif

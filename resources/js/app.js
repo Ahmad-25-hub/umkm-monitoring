@@ -27,6 +27,9 @@ import {
     KeyRound,
     LayoutDashboard,
     Lightbulb,
+    ListFilter,
+    Store,
+    PackageSearch,
     LogOut,
     Mail,
     Menu,
@@ -81,6 +84,9 @@ const icons = {
     KeyRound,
     LayoutDashboard,
     Lightbulb,
+    ListFilter,
+    Store,
+    PackageSearch,
     LogOut,
     Mail,
     Menu,
@@ -121,30 +127,57 @@ const initializeSidebar = () => {
         return;
     }
 
-    const open = () => {
-        document.body.classList.add('sidebar-open');
-        openButton.setAttribute('aria-expanded', 'true');
-        sidebar.querySelector('a')?.focus();
+    const desktop = window.matchMedia('(min-width: 1024px)');
+    const background = [document.querySelector('.dashboard-content'), document.querySelector('.employee-bottom-nav')].filter(Boolean);
+    const setOpen = (isOpen, restoreFocus = true) => {
+        document.body.classList.toggle('sidebar-open', isOpen);
+        openButton.setAttribute('aria-expanded', String(isOpen));
+        sidebar.inert = ! isOpen && ! desktop.matches;
+        background.forEach((element) => { element.inert = isOpen && ! desktop.matches; });
+
+        if (isOpen) {
+            sidebar.querySelector('a')?.focus();
+        } else if (restoreFocus) {
+            openButton.focus();
+        }
     };
 
-    const close = () => {
-        document.body.classList.remove('sidebar-open');
-        openButton.setAttribute('aria-expanded', 'false');
-        openButton.focus();
-    };
-
-    openButton.setAttribute('aria-expanded', 'false');
-    openButton.addEventListener('click', open);
-    closeButtons.forEach((button) => button.addEventListener('click', close));
+    setOpen(false, false);
+    openButton.addEventListener('click', () => setOpen(true));
+    closeButtons.forEach((button) => button.addEventListener('click', () => setOpen(false)));
+    desktop.addEventListener('change', () => setOpen(false, false));
+    sidebar.querySelectorAll('a').forEach((link) => {
+        link.addEventListener('click', () => {
+            if (document.body.classList.contains('sidebar-open')) {
+                setOpen(false);
+            }
+        });
+    });
     collapseButton?.addEventListener('click', () => {
         const collapsed = document.body.classList.toggle('sidebar-collapsed');
         collapseButton.setAttribute('aria-expanded', String(! collapsed));
-        collapseButton.setAttribute('aria-label', collapsed ? 'Expand navigation' : 'Collapse navigation');
+        collapseButton.setAttribute('aria-label', collapsed ? 'Perluas navigasi' : 'Ciutkan navigasi');
     });
 
     document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && document.body.classList.contains('sidebar-open')) {
-            close();
+        if (! document.body.classList.contains('sidebar-open')) {
+            return;
+        }
+
+        if (event.key === 'Escape') {
+            setOpen(false);
+        } else if (event.key === 'Tab') {
+            const items = [...sidebar.querySelectorAll('a[href], button:not(:disabled)')].filter((item) => item.getClientRects().length);
+            const first = items[0];
+            const last = items.at(-1);
+
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last?.focus();
+            } else if (! event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first?.focus();
+            }
         }
     });
 };
@@ -348,6 +381,11 @@ const initializePasswordControls = () => {
 const initializeSensitiveForms = () => {
     document.querySelectorAll('form[data-confirm], form[data-submit-once]').forEach((form) => {
         form.addEventListener('submit', (event) => {
+            if (form.getAttribute('aria-busy') === 'true') {
+                event.preventDefault();
+                return;
+            }
+
             if (form.dataset.confirm && ! window.confirm(form.dataset.confirm)) {
                 event.preventDefault();
                 return;
@@ -357,6 +395,15 @@ const initializeSensitiveForms = () => {
                 const submitButton = form.querySelector('[type="submit"]');
                 submitButton?.setAttribute('disabled', '');
                 form.setAttribute('aria-busy', 'true');
+
+                if (submitButton) {
+                    const progress = document.createElement('span');
+                    progress.textContent = 'Memproses…';
+                    progress.className = 'text-xs';
+                    progress.setAttribute('data-submit-progress', '');
+                    progress.setAttribute('role', 'status');
+                    submitButton.after(progress);
+                }
             }
         });
     });
@@ -404,7 +451,7 @@ const initializeSparklines = () => {
         const range = Math.max(max - min, 1);
         const padding = 3;
         const points = values.map((value, index) => [
-            padding + (index / (values.length - 1)) * (width - padding * 2),
+            padding + (index / Math.max(values.length - 1, 1)) * (width - padding * 2),
             padding + (1 - (value - min) / range) * (height - padding * 2),
         ]);
         const color = canvas.dataset.tone === 'neutral' ? '#7a8580' : '#2f8b68';
@@ -432,8 +479,8 @@ const chartPoints = (values, max, bounds) => values.map((value, index) => [
 const renderSalesChart = (canvas, period, hoverIndex = null) => {
     const { context, width, height } = prepareCanvas(canvas);
     const bounds = { left: 48, right: width - 46, top: 16, bottom: height - 34 };
-    const revenueMax = Math.ceil(Math.max(...period.revenue) * 1.22);
-    const transactionMax = Math.ceil(Math.max(...period.transactions) * 1.22 / 50) * 50;
+    const revenueMax = Math.max(1, Math.ceil(Math.max(...period.revenue) * 1.22));
+    const transactionMax = Math.max(50, Math.ceil(Math.max(...period.transactions) * 1.22 / 50) * 50);
 
     context.clearRect(0, 0, width, height);
     context.font = '10px "Instrument Sans", sans-serif';
@@ -537,6 +584,7 @@ const initializeSalesChart = () => {
 
         chart.querySelectorAll('[data-chart-period]').forEach((button) => {
             button.classList.toggle('is-active', button.dataset.chartPeriod === key);
+            button.setAttribute('aria-pressed', String(button.dataset.chartPeriod === key));
         });
         chart.querySelector('[data-revenue-total]').textContent = period.revenueTotal;
         chart.querySelector('[data-revenue-change]').textContent = period.revenueChange;
@@ -620,8 +668,9 @@ const initializeInvitationCodeCopy = () => {
         try {
             await navigator.clipboard.writeText(code.textContent.trim());
             button.querySelector('span').textContent = 'Tersalin';
+            document.querySelector('[data-copy-feedback]').textContent = 'Kode berhasil disalin. Bagikan kepada karyawan Anda.';
         } catch {
-            code.focus?.();
+            document.querySelector('[data-copy-feedback]').textContent = 'Kode belum bisa disalin otomatis. Pilih teks kode, lalu salin secara manual.';
         }
     });
 };
@@ -651,6 +700,111 @@ const initializeTaskForm = () => {
     updateScheduleFields();
 };
 
+
+const initializeTaskWorkspace = () => {
+    const workspace = document.querySelector('[data-task-workspace]');
+
+    if (! workspace) {
+        return;
+    }
+
+    const search = workspace.querySelector('[data-task-search]');
+    const filter = workspace.querySelector('[data-task-filter]');
+    const groups = [...workspace.querySelectorAll('[data-task-group]')];
+    const resultCount = workspace.querySelector('[data-task-result-count]');
+    const noResults = workspace.querySelector('[data-task-no-results]');
+    const initialOpenStates = new Map(groups.map((group) => [group, group.open]));
+    const update = () => {
+        const query = search.value.trim().toLocaleLowerCase('id-ID');
+        const filtering = query !== '' || filter.value !== 'all';
+        let visibleCount = 0;
+
+        groups.forEach((group) => {
+            const matchesGroup = filter.value === 'all' || filter.value === group.dataset.taskGroup;
+            let groupCount = 0;
+
+            group.querySelectorAll('[data-task-entry]').forEach((entry) => {
+                const matches = matchesGroup && entry.dataset.taskTitle.toLocaleLowerCase('id-ID').includes(query);
+                entry.hidden = ! matches;
+
+                if (matches) {
+                    groupCount += 1;
+                }
+            });
+
+            group.hidden = groupCount === 0;
+            group.open = filtering ? groupCount > 0 : initialOpenStates.get(group);
+            visibleCount += groupCount;
+        });
+
+        resultCount.textContent = `${visibleCount} tugas ditampilkan.`;
+        noResults.hidden = ! filtering || visibleCount > 0;
+    };
+
+    workspace.querySelector('[data-task-filters]').hidden = false;
+    search.addEventListener('input', update);
+    filter.addEventListener('change', update);
+    workspace.querySelector('[data-task-reset]').addEventListener('click', () => {
+        search.value = '';
+        filter.value = 'all';
+        update();
+        search.focus();
+    });
+};
+
+const initializeSectionNavigation = () => {
+    const links = [...document.querySelectorAll('[data-section-link]')];
+    const update = () => {
+        const section = window.location.hash.slice(1) || 'employee-tasks';
+
+        links.forEach((link) => {
+            const active = link.dataset.sectionLink === section;
+            link.classList.toggle('is-active', active);
+
+            if (active) {
+                link.setAttribute('aria-current', 'location');
+            } else {
+                link.removeAttribute('aria-current');
+            }
+        });
+
+        if (window.location.hash === '#team-access') {
+            const invitation = document.querySelector('#team-access details');
+
+            if (invitation) {
+                invitation.open = true;
+            }
+        }
+    };
+
+    window.addEventListener('hashchange', update);
+    update();
+};
+
+const initializeSalesUpload = () => {
+    const input = document.querySelector('[data-sales-file]');
+    const selection = document.querySelector('[data-file-selection]');
+
+    if (! input || ! selection) {
+        return;
+    }
+
+    input.addEventListener('change', () => {
+        const file = input.files[0];
+        selection.textContent = file
+            ? `${file.name} · ${Math.max(1, Math.round(file.size / 1024)).toLocaleString('id-ID')} KB · siap diunggah`
+            : 'Belum ada file dipilih.';
+    });
+};
+
+window.addEventListener('pageshow', () => {
+    document.querySelectorAll('form[aria-busy="true"]').forEach((form) => {
+        form.removeAttribute('aria-busy');
+        form.querySelector('[type="submit"]')?.removeAttribute('disabled');
+        form.querySelector('[data-submit-progress]')?.remove();
+    });
+});
+
 document.addEventListener('DOMContentLoaded', () => {
     initializeIcons();
     initializeSidebar();
@@ -665,4 +819,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeAiSuggestions();
     initializeInvitationCodeCopy();
     initializeTaskForm();
+    initializeTaskWorkspace();
+    initializeSectionNavigation();
+    initializeSalesUpload();
 });

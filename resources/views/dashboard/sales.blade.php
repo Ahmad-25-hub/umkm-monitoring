@@ -18,9 +18,9 @@
                     </p>
                 </div>
 
-                <form method="GET" action="{{ route('sales.index') }}" class="grid gap-3 sm:grid-cols-3 xl:min-w-[42rem]" aria-label="Filter laporan penjualan">
+                <form method="GET" action="{{ route('sales.index') }}" class="grid gap-3 sm:grid-cols-3 xl:w-full xl:max-w-xl" aria-label="Filter laporan penjualan">
                     <label class="grid gap-1.5">
-                        <span class="text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-ink-faint">Periode</span>
+                        <span class="text-xs font-semibold uppercase tracking-[0.08em] text-ink-faint">Periode</span>
                         <select name="period" class="h-10 rounded-xl border border-line bg-white px-3 text-xs font-medium text-ink focus:border-brand-200 focus:ring-3 focus:ring-brand-500/15">
                             @foreach ($report['filters']['periodOptions'] as $value => $option)
                                 <option value="{{ $value }}" @selected($report['filters']['period'] === $value)>{{ $option['label'] }}</option>
@@ -29,7 +29,7 @@
                     </label>
 
                     <label class="grid gap-1.5">
-                        <span class="text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-ink-faint">Kanal</span>
+                        <span class="text-xs font-semibold uppercase tracking-[0.08em] text-ink-faint">Kanal</span>
                         <select name="channel" class="h-10 rounded-xl border border-line bg-white px-3 text-xs font-medium text-ink focus:border-brand-200 focus:ring-3 focus:ring-brand-500/15">
                             <option value="">Semua kanal</option>
                             @foreach ($report['filters']['channelOptions'] as $channel)
@@ -39,7 +39,7 @@
                     </label>
 
                     <label class="grid gap-1.5">
-                        <span class="text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-ink-faint">Status</span>
+                        <span class="text-xs font-semibold uppercase tracking-[0.08em] text-ink-faint">Status</span>
                         <select name="status" class="h-10 rounded-xl border border-line bg-white px-3 text-xs font-medium text-ink focus:border-brand-200 focus:ring-3 focus:ring-brand-500/15">
                             @foreach ($report['filters']['statusOptions'] as $value => $label)
                                 <option value="{{ $value }}" @selected($report['filters']['status'] === $value)>{{ $label }}</option>
@@ -102,7 +102,7 @@
                                 <div class="flex items-start justify-between gap-4 text-xs">
                                     <div class="min-w-0">
                                         <p class="truncate font-semibold text-ink">{{ $channel['name'] }}</p>
-                                        <p class="mt-1 text-[0.68rem] text-ink-faint">{{ $channel['transactions'] }} pesanan</p>
+                                        <p class="mt-1 text-xs text-ink-faint">{{ $channel['transactions'] }} pesanan</p>
                                     </div>
                                     <p class="shrink-0 font-semibold text-ink">{{ $channel['revenue'] }}</p>
                                 </div>
@@ -138,7 +138,7 @@
                                 <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-50 text-xs font-semibold text-brand-700">{{ $index + 1 }}</span>
                                 <div class="min-w-0 flex-1">
                                     <p class="truncate text-xs font-semibold text-ink">{{ $product['name'] }}</p>
-                                    <p class="mt-1 text-[0.68rem] text-ink-faint">{{ $product['units'] }} produk terjual</p>
+                                    <p class="mt-1 text-xs text-ink-faint">{{ $product['units'] }} produk terjual</p>
                                 </div>
                                 <p class="shrink-0 text-xs font-semibold text-ink">{{ $product['revenue'] }}</p>
                             </li>
@@ -161,12 +161,12 @@
                     <p class="section-kicker">Seluruh usaha milik Anda</p>
                     <h2 id="business-performance-heading" class="panel-title mt-1.5">Performa UMKM</h2>
                 </div>
-                <p class="text-[0.68rem] text-ink-faint">Mengikuti periode dan filter aktif</p>
+                <p class="text-xs text-ink-faint">Mengikuti periode dan filter aktif</p>
             </div>
 
             <div class="overflow-x-auto">
-                <table class="w-full min-w-[36rem] text-left">
-                    <thead class="bg-canvas/70 text-[0.62rem] font-semibold uppercase tracking-[0.08em] text-ink-faint">
+                <table class="responsive-table w-full min-w-[36rem] text-left">
+                    <thead class="bg-canvas/70 text-xs font-semibold uppercase tracking-[0.08em] text-ink-faint">
                         <tr>
                             <th class="px-6 py-3 sm:px-7">Peringkat</th>
                             <th class="px-4 py-3">Nama UMKM</th>
@@ -177,12 +177,12 @@
                     <tbody class="divide-y divide-line-soft text-xs">
                         @foreach ($report['businessPerformance'] as $business)
                             <tr>
-                                <td class="px-6 py-4 sm:px-7">
-                                    <span class="grid h-7 w-7 place-items-center rounded-lg bg-canvas text-[0.68rem] font-semibold text-ink-muted">{{ $business['rank'] }}</span>
+                                <td data-label="Peringkat" class="px-6 py-4 sm:px-7">
+                                    <span class="grid h-7 w-7 place-items-center rounded-lg bg-canvas text-xs font-semibold text-ink-muted">{{ $business['rank'] }}</span>
                                 </td>
-                                <td class="px-4 py-4 font-semibold text-ink">{{ $business['name'] }}</td>
-                                <td class="px-4 py-4 text-right text-ink-muted">{{ $business['transactions'] }}</td>
-                                <td class="px-6 py-4 text-right font-semibold text-ink sm:px-7">{{ $business['revenue'] }}</td>
+                                <td data-label="Nama UMKM" class="px-4 py-4 font-semibold text-ink">{{ $business['name'] }}</td>
+                                <td data-label="Pesanan" class="px-4 py-4 text-right text-ink-muted">{{ $business['transactions'] }}</td>
+                                <td data-label="Omzet Bersih" class="px-6 py-4 text-right font-semibold text-ink sm:px-7">{{ $business['revenue'] }}</td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -196,13 +196,13 @@
                     <p class="section-kicker">Pesanan terbaru</p>
                     <h2 id="recent-sales-heading" class="panel-title mt-1.5">Transaksi Penjualan</h2>
                 </div>
-                <p class="text-[0.68rem] text-ink-faint">{{ $report['recentOrders']->total() }} transaksi ditemukan</p>
+                <p class="text-xs text-ink-faint">{{ $report['recentOrders']->total() }} transaksi ditemukan</p>
             </div>
 
             @if ($report['recentOrders']->count())
                 <div class="overflow-x-auto">
-                    <table class="w-full min-w-[52rem] text-left">
-                        <thead class="bg-canvas/70 text-[0.62rem] font-semibold uppercase tracking-[0.08em] text-ink-faint">
+                    <table class="responsive-table w-full min-w-[52rem] text-left">
+                        <thead class="bg-canvas/70 text-xs font-semibold uppercase tracking-[0.08em] text-ink-faint">
                             <tr>
                                 <th class="px-6 py-3 sm:px-7">Pesanan</th>
                                 <th class="px-4 py-3">Produk</th>
@@ -215,18 +215,18 @@
                         <tbody class="divide-y divide-line-soft text-xs">
                             @foreach ($report['recentOrders'] as $order)
                                 <tr class="transition hover:bg-canvas/55">
-                                    <td class="px-6 py-4 font-medium text-ink-muted sm:px-7">#{{ $order['id'] }}</td>
-                                    <td class="max-w-64 px-4 py-4">
+                                    <td data-label="Pesanan" class="px-6 py-4 font-medium text-ink-muted sm:px-7">#{{ $order['id'] }}</td>
+                                    <td data-label="Produk" class="mobile-wide max-w-64 px-4 py-4">
                                         <p class="truncate font-semibold text-ink">{{ $order['product'] }}</p>
                                         @if ($order['additionalProducts'] > 0)
-                                            <p class="mt-1 text-[0.65rem] text-ink-faint">+{{ $order['additionalProducts'] }} produk lainnya</p>
+                                            <p class="mt-1 text-xs text-ink-faint">+{{ $order['additionalProducts'] }} produk lainnya</p>
                                         @endif
                                     </td>
-                                    <td class="whitespace-nowrap px-4 py-4 text-ink-muted">{{ $order['orderedAt'] }}</td>
-                                    <td class="px-4 py-4 text-ink-muted">{{ $order['channel'] }}</td>
-                                    <td class="px-4 py-4">
+                                    <td data-label="Waktu" class="whitespace-nowrap px-4 py-4 text-ink-muted">{{ $order['orderedAt'] }}</td>
+                                    <td data-label="Kanal" class="px-4 py-4 text-ink-muted">{{ $order['channel'] }}</td>
+                                    <td data-label="Status" class="px-4 py-4">
                                         <span @class([
-                                            'inline-flex rounded-full px-2.5 py-1 text-[0.62rem] font-semibold',
+                                            'inline-flex rounded-full px-2.5 py-1 text-xs font-semibold',
                                             'bg-brand-50 text-brand-700' => $order['status']['tone'] === 'positive',
                                             'bg-amber-50 text-warning' => $order['status']['tone'] === 'warning',
                                             'bg-red-50 text-critical' => $order['status']['tone'] === 'negative',
@@ -234,7 +234,7 @@
                                             {{ $order['status']['label'] }}
                                         </span>
                                     </td>
-                                    <td class="whitespace-nowrap px-6 py-4 text-right font-semibold text-ink sm:px-7">{{ $order['amount'] }}</td>
+                                    <td data-label="Nilai Bersih" class="whitespace-nowrap px-6 py-4 text-right font-semibold text-ink sm:px-7">{{ $order['amount'] }}</td>
                                 </tr>
                             @endforeach
                         </tbody>

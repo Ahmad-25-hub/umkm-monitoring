@@ -30,13 +30,13 @@ class ExampleTest extends TestCase
         $response
             ->assertOk()
             ->assertSeeText('Penjualan hari ini sudah tercatat.')
-            ->assertSeeText('Sinkronisasi Data')
+            ->assertSeeText('Status data penjualan')
             ->assertSeeText('Rp75.000')
-            ->assertSeeText('Sales Performance')
-            ->assertSeeText('NADI Insights')
-            ->assertSeeText('Team Performance')
-            ->assertSeeText('Needs Your Attention')
-            ->assertSeeText('Ask NADI');
+            ->assertSeeText('Performa penjualan')
+            ->assertSeeText('Catatan usaha')
+            ->assertSeeText('Anggota tim')
+            ->assertSeeText('Perlu perhatian')
+            ->assertSeeText('Tanya NADI');
     }
 
     public function test_owner_overview_exposes_reusable_loading_states(): void
@@ -63,8 +63,8 @@ class ExampleTest extends TestCase
         $response
             ->assertOk()
             ->assertSeeText('Belum ada ringkasan bisnis')
-            ->assertSeeText('Tidak ada masalah yang membutuhkan perhatian')
-            ->assertSeeText('Belum ada insight bisnis')
+            ->assertSeeText('Tidak ada pengingat dari data saat ini')
+            ->assertSeeText('Belum ada catatan usaha')
             ->assertSeeText('Belum ada karyawan terdaftar')
             ->assertSeeText('Belum ada riwayat penjualan');
     }

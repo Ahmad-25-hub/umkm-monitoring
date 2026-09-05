@@ -6,7 +6,7 @@
         ->all();
 @endphp
 
-<form method="POST" action="{{ $action }}" class="grid gap-6" data-task-form>
+<form method="POST" action="{{ $action }}" class="grid gap-6" data-task-form data-submit-once>
     @csrf
     @if ($method !== 'POST')
         @method($method)
@@ -95,7 +95,7 @@
             <input type="checkbox" name="is_active" value="1" @checked((bool) old('is_active', $task->is_active ?? true)) class="mt-0.5 h-4 w-4 rounded border-line-soft text-brand-700 focus:ring-brand-500">
             <span>
                 <span class="block text-sm font-semibold text-ink">Tugas aktif</span>
-                <span class="mt-1 block text-xs leading-5 text-ink-muted">Tugas harian yang dinonaktifkan tidak akan menghasilkan occurrence baru.</span>
+                <span class="mt-1 block text-xs leading-5 text-ink-muted">Jika dinonaktifkan, tugas tidak akan dibuat otomatis setiap hari.</span>
             </span>
         </label>
     </section>
@@ -117,7 +117,7 @@
                 </label>
             @empty
                 <div class="sm:col-span-2 rounded-2xl border border-dashed border-line-soft bg-canvas px-5 py-8 text-center text-sm text-ink-muted">
-                    Belum ada karyawan aktif pada usaha ini.
+                    Belum ada karyawan aktif pada usaha ini. Undang karyawan melalui bagian tim pada halaman ringkasan.
                 </div>
             @endforelse
         </div>
