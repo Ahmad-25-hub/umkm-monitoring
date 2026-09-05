@@ -29,7 +29,7 @@
             <div class="section-heading-row">
                 <div>
                     <p class="section-kicker">Data penjualan</p>
-                    <h2 id="sales-import-title" class="section-heading">Unggah dari TikTok Seller</h2>
+                    <h2 id="sales-import-title" class="section-heading">Unggah dari TikTok Seller atau Shopee</h2>
                 </div>
                 <span class="section-meta">{{ $salesStatistics['last_import']['label'] }}</span>
             </div>
@@ -47,8 +47,8 @@
                             <i data-lucide="file-chart-column" class="h-5 w-5" aria-hidden="true"></i>
                         </span>
                         <div>
-                            <h3 class="text-base font-semibold text-ink">File pesanan CSV</h3>
-                            <p class="mt-1 text-xs leading-5 text-ink-muted">Gunakan file yang diunduh langsung dari menu pesanan TikTok Seller.</p>
+                            <h3 class="text-base font-semibold text-ink">File pesanan CSV atau XLSX</h3>
+                            <p class="mt-1 text-xs leading-5 text-ink-muted">Gunakan CSV dari TikTok Seller atau XLSX dari menu Pesanan Shopee Seller.</p>
                         </div>
                     </div>
 
@@ -57,7 +57,7 @@
                         <input
                             type="file"
                             name="sales_file"
-                            accept=".csv,text/csv"
+                            accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                             required
                             class="block w-full rounded-xl border border-line-soft bg-white text-sm font-normal text-ink file:mr-4 file:border-0 file:border-r file:border-line-soft file:bg-canvas file:px-4 file:py-3 file:text-xs file:font-semibold file:text-brand-800 hover:file:bg-brand-50 focus:outline-none focus:ring-4 focus:ring-brand-100"
                         >
@@ -72,7 +72,7 @@
                         Unggah dan perbarui statistik
                     </button>
 
-                    <p class="text-[0.68rem] leading-5 text-ink-faint">Pesanan dengan Order ID yang sama akan diperbarui, bukan diduplikasi.</p>
+                    <p class="text-[0.68rem] leading-5 text-ink-faint">Pesanan dengan nomor yang sama pada platform yang sama akan diperbarui, bukan diduplikasi.</p>
                 </form>
 
                 <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
@@ -80,6 +80,20 @@
                         <x-dashboard.metric-card :metric="$metric" />
                     @endforeach
                 </div>
+            </div>
+        </section>
+
+        <section aria-labelledby="employee-inventory-title">
+            <div class="section-heading-row">
+                <div>
+                    <p class="section-kicker">Stok & Persediaan</p>
+                    <h2 id="employee-inventory-title" class="section-heading">Monitoring Inventory</h2>
+                </div>
+                <span class="section-meta">Manajemen stok produk</span>
+            </div>
+
+            <div class="mt-5">
+                <x-employee.inventory-card :business="$business" :sales-statistics="$salesStatistics" />
             </div>
         </section>
 

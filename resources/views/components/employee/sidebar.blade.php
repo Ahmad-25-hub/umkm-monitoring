@@ -3,8 +3,8 @@
 @php
     $navigation = [
         ['label' => 'Tugas Saya', 'icon' => 'layout-dashboard', 'route' => 'employee.dashboard', 'active' => request()->routeIs('employee.dashboard')],
+        ['label' => 'Inventory', 'icon' => 'package', 'route' => null],
         ['label' => 'Jadwal', 'icon' => 'calendar-days', 'route' => null],
-        ['label' => 'Profil', 'icon' => 'contact-round', 'route' => null],
     ];
 @endphp
 
@@ -60,13 +60,6 @@
                     </div>
                 </div>
 
-                <form method="POST" action="{{ route('employee.logout') }}" class="mt-5 border-t border-white/[0.07] pt-4">
-                    @csrf
-                    <button type="submit" class="nav-item w-full" title="Keluar">
-                        <i data-lucide="log-out" aria-hidden="true"></i>
-                        <span>Keluar</span>
-                    </button>
-                </form>
             </div>
         </nav>
     </div>

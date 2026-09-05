@@ -24,7 +24,7 @@ class StoreSalesImportRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'sales_file' => ['required', 'file', 'mimes:csv,txt', 'extensions:csv', 'max:10240'],
+            'sales_file' => ['required', 'file', 'mimes:csv,txt,xlsx', 'extensions:csv,xlsx', 'max:10240'],
         ];
     }
 
@@ -34,11 +34,11 @@ class StoreSalesImportRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'sales_file.required' => 'Pilih file penjualan TikTok Seller yang akan diunggah.',
+            'sales_file.required' => 'Pilih file pesanan TikTok Seller atau Shopee yang akan diunggah.',
             'sales_file.file' => 'File penjualan tidak dapat dibaca.',
-            'sales_file.mimes' => 'File penjualan harus berformat CSV.',
-            'sales_file.extensions' => 'File penjualan harus berformat CSV.',
-            'sales_file.max' => 'Ukuran file penjualan maksimal 10 MB.',
+            'sales_file.mimes' => 'File pesanan harus berformat CSV TikTok Seller atau XLSX Shopee.',
+            'sales_file.extensions' => 'File pesanan harus berformat CSV TikTok Seller atau XLSX Shopee.',
+            'sales_file.max' => 'Ukuran file pesanan maksimal 10 MB.',
         ];
     }
 }

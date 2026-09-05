@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\BuildSalesDashboardStatisticsAction;
-use App\Actions\ImportTikTokSalesCsvAction;
+use App\Actions\ImportSalesOrdersAction;
 use App\Models\Business;
 use App\Models\BusinessMembership;
 use App\Models\User;
@@ -84,11 +84,11 @@ class OwnerOverviewController extends Controller
             $alerts[] = [
                 'category' => 'Data Penjualan',
                 'title' => 'Data penjualan belum diunggah',
-                'description' => 'Minta karyawan mengunggah file CSV dari TikTok Seller agar statistik mulai ditampilkan.',
+                'description' => 'Minta karyawan mengunggah file pesanan dari TikTok Seller atau Shopee agar statistik mulai ditampilkan.',
                 'severity' => 'warning',
                 'icon' => 'file-chart-column',
             ];
-        } elseif (! $lastImportAt->clone()->setTimezone(ImportTikTokSalesCsvAction::SALES_TIMEZONE)->isToday()) {
+        } elseif (! $lastImportAt->clone()->setTimezone(ImportSalesOrdersAction::SALES_TIMEZONE)->isToday()) {
             $alerts[] = [
                 'category' => 'Data Penjualan',
                 'title' => 'Data belum diperbarui hari ini',
@@ -121,8 +121,8 @@ class OwnerOverviewController extends Controller
                 'summary' => $hasSalesToday
                     ? number_format($todaySales['transactions'], 0, ',', '.').' transaksi menghasilkan '.$this->formatRupiah($todaySales['revenue']).' dari '.number_format($todaySales['units'], 0, ',', '.').' produk terjual.'
                     : ($hasImportedSales
-                        ? 'Statistik akan langsung berubah ketika file TikTok Seller terbaru memuat pesanan hari ini.'
-                        : 'Karyawan dapat mengunggah file CSV TikTok Seller dan statistik akan langsung tersedia di sini.'),
+                        ? 'Statistik akan langsung berubah ketika file pesanan terbaru memuat pesanan hari ini.'
+                        : 'Karyawan dapat mengunggah file pesanan TikTok Seller atau Shopee dan statistik akan langsung tersedia di sini.'),
                 'signals' => [
                     [
                         'label' => 'Transaksi hari ini',

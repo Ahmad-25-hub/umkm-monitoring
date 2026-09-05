@@ -13,6 +13,8 @@ import {
     ChevronDown,
     ChevronsLeft,
     ChevronsUpDown,
+    Circle,
+    CircleCheck,
     CircleHelp,
     Clock3,
     ContactRound,
@@ -20,21 +22,32 @@ import {
     createIcons,
     DatabaseZap,
     FileChartColumn,
+    Eye,
+    EyeOff,
+    KeyRound,
     LayoutDashboard,
     Lightbulb,
     LogOut,
+    Mail,
     Menu,
+    Monitor,
+    MonitorSmartphone,
     Package,
     PackageX,
     Plus,
     RadioTower,
     ReceiptText,
     Search,
+    Send,
+    Save,
     Settings2,
     ShieldCheck,
     ShoppingBasket,
     Sparkles,
     TrendingUp,
+    Trash2,
+    Upload,
+    UserRound,
     UserRoundCheck,
     UsersRound,
     X,
@@ -55,27 +68,40 @@ const icons = {
     ChevronDown,
     ChevronsLeft,
     ChevronsUpDown,
+    Circle,
+    CircleCheck,
     CircleHelp,
     Clock3,
     ContactRound,
     Copy,
     DatabaseZap,
     FileChartColumn,
+    Eye,
+    EyeOff,
+    KeyRound,
     LayoutDashboard,
     Lightbulb,
     LogOut,
+    Mail,
     Menu,
+    Monitor,
+    MonitorSmartphone,
     Package,
     PackageX,
     Plus,
     RadioTower,
     ReceiptText,
     Search,
+    Send,
+    Save,
     Settings2,
     ShieldCheck,
     ShoppingBasket,
     Sparkles,
     TrendingUp,
+    Trash2,
+    Upload,
+    UserRound,
     UserRoundCheck,
     UsersRound,
     X,
@@ -192,6 +218,147 @@ const initializeNotificationCenter = () => {
             close();
             toggle.focus();
         }
+    });
+};
+
+const initializeProfileMenus = () => {
+    document.querySelectorAll('[data-profile-menu]').forEach((menu) => {
+        const toggle = menu.querySelector('[data-profile-menu-toggle]');
+        const panel = menu.querySelector('[data-profile-menu-panel]');
+
+        if (! toggle || ! panel) {
+            return;
+        }
+
+        const items = () => [...panel.querySelectorAll('[data-profile-menu-item]')];
+        const close = (restoreFocus = false) => {
+            panel.hidden = true;
+            toggle.setAttribute('aria-expanded', 'false');
+
+            if (restoreFocus) {
+                toggle.focus();
+            }
+        };
+        const open = (focusFirst = false) => {
+            panel.hidden = false;
+            toggle.setAttribute('aria-expanded', 'true');
+            document.querySelector('.business-selector')?.removeAttribute('open');
+
+            if (focusFirst) {
+                items()[0]?.focus();
+            }
+        };
+
+        toggle.addEventListener('click', () => {
+            panel.hidden ? open() : close();
+        });
+
+        toggle.addEventListener('keydown', (event) => {
+            if (['ArrowDown', 'Enter', ' '].includes(event.key)) {
+                event.preventDefault();
+                open(true);
+            }
+        });
+
+        panel.addEventListener('keydown', (event) => {
+            const menuItems = items();
+            const currentIndex = menuItems.indexOf(document.activeElement);
+            let nextIndex = currentIndex;
+
+            if (event.key === 'ArrowDown') {
+                nextIndex = (currentIndex + 1) % menuItems.length;
+            } else if (event.key === 'ArrowUp') {
+                nextIndex = (currentIndex - 1 + menuItems.length) % menuItems.length;
+            } else if (event.key === 'Home') {
+                nextIndex = 0;
+            } else if (event.key === 'End') {
+                nextIndex = menuItems.length - 1;
+            } else if (event.key === 'Escape') {
+                event.preventDefault();
+                close(true);
+                return;
+            } else {
+                return;
+            }
+
+            event.preventDefault();
+            menuItems[nextIndex]?.focus();
+        });
+
+        document.addEventListener('click', (event) => {
+            if (! menu.contains(event.target)) {
+                close();
+            }
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && ! panel.hidden) {
+                close(true);
+            }
+        });
+    });
+};
+
+const initializePasswordControls = () => {
+    document.querySelectorAll('[data-password-toggle]').forEach((button) => {
+        const input = document.getElementById(button.getAttribute('aria-controls'));
+
+        if (! input) {
+            return;
+        }
+
+        button.addEventListener('click', () => {
+            const willShow = input.type === 'password';
+            input.type = willShow ? 'text' : 'password';
+            button.setAttribute('aria-label', willShow ? 'Sembunyikan password' : 'Tampilkan password');
+            const replacementIcon = document.createElement('i');
+            replacementIcon.setAttribute('data-lucide', willShow ? 'eye-off' : 'eye');
+            replacementIcon.setAttribute('aria-hidden', 'true');
+            replacementIcon.className = 'h-4 w-4';
+            button.querySelector('svg')?.replaceWith(replacementIcon);
+            initializeIcons();
+            input.focus();
+        });
+    });
+
+    const password = document.querySelector('[data-new-password]');
+
+    if (! password) {
+        return;
+    }
+
+    const updateRequirements = () => {
+        const checks = {
+            length: password.value.length >= 8,
+            case: /[a-z]/.test(password.value) && /[A-Z]/.test(password.value),
+            number: /\d/.test(password.value),
+        };
+
+        Object.entries(checks).forEach(([key, passes]) => {
+            const requirement = document.querySelector(`[data-password-requirement="${key}"]`);
+            requirement?.classList.toggle('text-brand-700', passes);
+            requirement?.classList.toggle('font-semibold', passes);
+        });
+    };
+
+    password.addEventListener('input', updateRequirements);
+    updateRequirements();
+};
+
+const initializeSensitiveForms = () => {
+    document.querySelectorAll('form[data-confirm], form[data-submit-once]').forEach((form) => {
+        form.addEventListener('submit', (event) => {
+            if (form.dataset.confirm && ! window.confirm(form.dataset.confirm)) {
+                event.preventDefault();
+                return;
+            }
+
+            if (form.hasAttribute('data-submit-once')) {
+                const submitButton = form.querySelector('[type="submit"]');
+                submitButton?.setAttribute('disabled', '');
+                form.setAttribute('aria-busy', 'true');
+            }
+        });
     });
 };
 
@@ -490,6 +657,9 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeSearchShortcut();
     initializeBusinessMenu();
     initializeNotificationCenter();
+    initializeProfileMenus();
+    initializePasswordControls();
+    initializeSensitiveForms();
     initializeSparklines();
     initializeSalesChart();
     initializeAiSuggestions();

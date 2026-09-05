@@ -25,7 +25,7 @@
             <div class="flex items-center justify-between gap-4">
                 <div>
                     <p class="section-kicker text-brand-200">Sinkronisasi Data</p>
-                    <p class="mt-1.5 text-sm font-medium text-white">Status data TikTok Seller</p>
+                    <p class="mt-1.5 text-sm font-medium text-white">Status data penjualan</p>
                 </div>
                 <i data-lucide="activity" class="h-5 w-5 text-brand-200" aria-hidden="true"></i>
             </div>

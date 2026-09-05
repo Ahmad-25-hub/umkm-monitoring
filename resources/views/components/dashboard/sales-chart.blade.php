@@ -1,4 +1,11 @@
-@props(['sales', 'loading' => false, 'class' => ''])
+@props([
+    'sales',
+    'loading' => false,
+    'class' => '',
+    'kicker' => 'Prioritas #6 · Detailed analytics',
+    'title' => 'Sales Performance',
+    'description' => 'Gunakan grafik ketika Anda ingin memahami pola di balik ringkasan utama.',
+])
 
 @php
     $hasSalesData = count($sales['periods']);
@@ -18,9 +25,9 @@
     @else
         <div class="sales-header">
             <div>
-                <p class="section-kicker">Prioritas #6 · Detailed analytics</p>
-                <h2 class="panel-title mt-1.5">Sales Performance</h2>
-                <p class="mt-2 text-xs leading-5 text-ink-muted">Gunakan grafik ketika Anda ingin memahami pola di balik ringkasan utama.</p>
+                <p class="section-kicker">{{ $kicker }}</p>
+                <h2 class="panel-title mt-1.5">{{ $title }}</h2>
+                <p class="mt-2 text-xs leading-5 text-ink-muted">{{ $description }}</p>
             </div>
 
             @if ($hasSalesData)

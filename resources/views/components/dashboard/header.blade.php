@@ -87,9 +87,7 @@
                 </div>
             </details>
 
-            <button type="button" class="profile-avatar" aria-label="Open profile for {{ $owner['name'] }}">
-                {{ $owner['initials'] }}
-            </button>
+            <x-account.profile-dropdown role-label="Pemilik" logout-route="logout" />
         </div>
     </div>
 </header>

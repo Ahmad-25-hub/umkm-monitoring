@@ -1,4 +1,8 @@
-@props(['employee', 'business'])
+@props([
+    'employee',
+    'business',
+    'title' => 'Dashboard Karyawan — NADI',
+])
 
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -8,7 +12,7 @@
         <meta name="description" content="Ruang kerja karyawan NADI untuk {{ $business->name }}.">
         <meta name="theme-color" content="#f5f7f4">
 
-        <title>Dashboard Karyawan — NADI</title>
+        <title>{{ $title }}</title>
 
         @fonts
         @vite(['resources/css/app.css', 'resources/js/app.js'])

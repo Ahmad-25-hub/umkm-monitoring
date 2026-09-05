@@ -19,7 +19,7 @@ class BuildSalesDashboardStatisticsAction
      */
     public function execute(Business $business): array
     {
-        $today = CarbonImmutable::now(ImportTikTokSalesCsvAction::SALES_TIMEZONE)->startOfDay();
+        $today = CarbonImmutable::now(ImportSalesOrdersAction::SALES_TIMEZONE)->startOfDay();
         $historyStart = $today->startOfMonth()->subMonths(23);
         $dailyStatistics = SalesOrder::query()
             ->whereBelongsTo($business)

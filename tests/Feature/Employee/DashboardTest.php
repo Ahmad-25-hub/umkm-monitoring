@@ -45,6 +45,9 @@ class DashboardTest extends TestCase
             ->assertSeeText('Tugas Anda hari ini.')
             ->assertSeeText('Usaha Aktif Karyawan')
             ->assertSeeText('Karyawan Nyata')
+            ->assertSeeText('Inventory')
+            ->assertSeeText('Monitoring Inventory')
+            ->assertSeeText('Ringkasan Persediaan & Stok')
             ->assertSeeText('Daftar tugas');
     }
 

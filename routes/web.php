@@ -1,5 +1,12 @@
 <?php
 
+use App\Http\Controllers\Account\AccountSettingsController;
+use App\Http\Controllers\Account\OtherBrowserSessionController;
+use App\Http\Controllers\Account\PasswordController;
+use App\Http\Controllers\Account\PendingEmailController;
+use App\Http\Controllers\Account\PendingEmailVerificationController;
+use App\Http\Controllers\Account\ProfileAvatarController;
+use App\Http\Controllers\Account\ProfileController;
 use App\Http\Controllers\ActiveBusinessController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\EmployeeAuthenticatedSessionController;
@@ -10,6 +17,7 @@ use App\Http\Controllers\Employee\BusinessMembershipController as EmployeeBusine
 use App\Http\Controllers\Employee\DashboardController as EmployeeDashboardController;
 use App\Http\Controllers\Employee\SalesImportController;
 use App\Http\Controllers\Employee\TaskOccurrenceProgressController;
+use App\Http\Controllers\Owner\SalesController;
 use App\Http\Controllers\Owner\TaskController;
 use App\Http\Controllers\Owner\TaskOccurrenceController;
 use App\Http\Controllers\OwnerOverviewController;
@@ -33,11 +41,40 @@ Route::middleware('guest')->group(function (): void {
 });
 
 Route::middleware('auth')->group(function (): void {
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::patch('/profile', [ProfileController::class, 'update'])
+        ->middleware('throttle:account-sensitive')
+        ->name('profile.update');
+    Route::patch('/profile/avatar', [ProfileAvatarController::class, 'update'])
+        ->middleware('throttle:account-sensitive')
+        ->name('profile.avatar.update');
+    Route::delete('/profile/avatar', [ProfileAvatarController::class, 'destroy'])
+        ->middleware('throttle:account-sensitive')
+        ->name('profile.avatar.destroy');
+
+    Route::get('/account/settings', [AccountSettingsController::class, 'show'])->name('account.settings');
+    Route::patch('/account/email', [PendingEmailController::class, 'update'])
+        ->middleware('throttle:account-sensitive')
+        ->name('account.email.update');
+    Route::post('/account/email/verification-notification', [PendingEmailController::class, 'store'])
+        ->middleware('throttle:email-verification')
+        ->name('account.email.verification.send');
+    Route::get('/account/email/verify/{user}', PendingEmailVerificationController::class)
+        ->middleware(['signed', 'throttle:email-verification'])
+        ->name('account.email.verify');
+    Route::patch('/account/password', [PasswordController::class, 'update'])
+        ->middleware('throttle:account-sensitive')
+        ->name('account.password.update');
+    Route::delete('/account/sessions/others', [OtherBrowserSessionController::class, 'destroy'])
+        ->middleware('throttle:account-sensitive')
+        ->name('account.sessions.destroy-others');
+
     Route::get('/', OwnerOverviewController::class)
         ->middleware('active.business')
         ->name('overview');
 
     Route::middleware('active.business')->group(function (): void {
+        Route::get('/sales', SalesController::class)->name('sales.index');
         Route::resource('tasks', TaskController::class)->except(['show', 'destroy']);
         Route::get('/task-monitoring', TaskOccurrenceController::class)->name('task-occurrences.index');
     });

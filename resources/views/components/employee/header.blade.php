@@ -13,7 +13,7 @@
 
         <div class="flex min-w-0 items-center gap-3">
             <span class="hidden rounded-full border border-brand-100 bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700 sm:inline-flex">Karyawan aktif</span>
-            <span class="profile-avatar" aria-label="Profil {{ $employee['name'] }}">{{ $employee['initials'] }}</span>
+            <x-account.profile-dropdown role-label="Karyawan" logout-route="employee.logout" />
         </div>
     </div>
 </header>

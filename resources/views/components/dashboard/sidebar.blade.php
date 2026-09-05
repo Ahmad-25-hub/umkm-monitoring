@@ -3,7 +3,7 @@
         ['label' => 'Overview', 'icon' => 'layout-dashboard', 'route' => 'overview', 'active' => request()->routeIs('overview')],
         ['label' => 'Tugas', 'icon' => 'activity', 'route' => 'tasks.index', 'active' => request()->routeIs('tasks.*')],
         ['label' => 'Monitoring Tugas', 'icon' => 'user-round-check', 'route' => 'task-occurrences.index', 'active' => request()->routeIs('task-occurrences.*')],
-        ['label' => 'Sales', 'icon' => 'chart-no-axes-combined', 'route' => null],
+        ['label' => 'Penjualan', 'icon' => 'chart-no-axes-combined', 'route' => 'sales.index', 'active' => request()->routeIs('sales.*')],
         ['label' => 'Employees', 'icon' => 'users-round', 'route' => null],
         ['label' => 'Inventory', 'icon' => 'package', 'route' => null],
         ['label' => 'Reports', 'icon' => 'file-chart-column', 'route' => null],
@@ -11,7 +11,7 @@
     ];
 
     $secondaryNavigation = [
-        ['label' => 'Settings', 'icon' => 'settings-2'],
+        ['label' => 'Pengaturan Sistem', 'icon' => 'settings-2'],
         ['label' => 'Help & Support', 'icon' => 'circle-help'],
     ];
 @endphp
@@ -79,13 +79,6 @@
                     @endforeach
                 </ul>
 
-                <form method="POST" action="{{ route('logout') }}" class="mt-1">
-                    @csrf
-                    <button type="submit" class="nav-item w-full" title="Keluar">
-                        <i data-lucide="log-out" aria-hidden="true"></i>
-                        <span>Keluar</span>
-                    </button>
-                </form>
             </div>
         </nav>
     </div>

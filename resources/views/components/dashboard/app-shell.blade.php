@@ -2,6 +2,7 @@
     'owner' => ['name' => 'Owner', 'initials' => 'OW'],
     'businesses' => [],
     'activeBusinessId' => null,
+    'title' => 'NADI — Owner Overview',
 ])
 
 <!DOCTYPE html>
@@ -12,7 +13,7 @@
         <meta name="description" content="NADI gives business owners a clear view of what is happening and what to do next.">
         <meta name="theme-color" content="#f5f7f4">
 
-        <title>NADI — Owner Overview</title>
+        <title>{{ $title }}</title>
 
         @fonts
         @vite(['resources/css/app.css', 'resources/js/app.js'])
