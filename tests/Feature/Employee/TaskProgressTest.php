@@ -167,6 +167,87 @@ class TaskProgressTest extends TestCase
         $this->assertNull($submittedOccurrence->fresh()->employee_note);
     }
 
+    public function test_employee_gets_a_fresh_daily_task_after_midnight_and_can_complete_it_again(): void
+    {
+        $this->travelTo('2026-09-05 16:59:00');
+        [$business, $owner] = $this->createBusinessWithOwner();
+        $employee = $this->createEmployee($business);
+        $otherEmployee = $this->createEmployee($business);
+        $task = Task::factory()->daily()->for($business)->for($owner, 'creator')->create([
+            'title' => 'Print resi harian', 'starts_on' => '2026-09-05', 'ends_on' => null,
+        ]);
+        $task->assignees()->attach([$employee->id, $otherEmployee->id]);
+        $otherTask = Task::factory()->daily()->create(['starts_on' => '2026-09-05']);
+        $otherTask->assignees()->attach($employee);
+        $yesterday = TaskOccurrence::factory()->completed()->for($task)->for($employee, 'assignee')->create([
+            'title' => 'Print resi harian', 'occurrence_date' => '2026-09-05',
+            'due_at' => '2026-09-05 17:00:00', 'employee_note' => 'Catatan kemarin.',
+        ]);
+        $history = $yesterday->getAttributes();
+
+        $this->travelTo('2026-09-05 17:00:00');
+        $this->actingAs($employee)->withSession(['active_employee_business_id' => $business->id])
+            ->get(route('employee.dashboard'))
+            ->assertSeeText('Belum dikerjakan')
+            ->assertSeeText('06 Sep 2026')
+            ->assertViewHas('taskGroups', fn ($groups) => $groups['new']->count() === 1 && $groups['completed']->contains($yesterday));
+        $today = $task->occurrences()->whereDate('occurrence_date', '2026-09-06')->sole();
+        $this->assertDatabaseCount('task_occurrences', 2);
+        $this->assertSame(TaskOccurrenceStatus::Pending, $today->status);
+        $this->assertNull($today->employee_note);
+        $this->assertDatabaseMissing('task_occurrences', ['task_id' => $otherTask->id]);
+        $this->assertDatabaseMissing('task_occurrences', ['user_id' => $otherEmployee->id]);
+
+        $this->get(route('employee.dashboard'))
+            ->assertViewHas('taskGroups', fn ($groups) => $groups['today']->contains($today));
+        $this->patch(route('employee.tasks.update', $today), [
+            'status' => 'completed', 'employee_note' => 'Resi hari ini selesai.',
+        ])->assertRedirectToRoute('employee.dashboard');
+        $this->get(route('employee.dashboard'))->assertSeeText('Resi hari ini selesai.');
+
+        $this->assertDatabaseCount('task_occurrences', 2);
+        $this->assertDatabaseHas('task_occurrences', ['id' => $today->id, 'status' => 'completed', 'employee_note' => 'Resi hari ini selesai.']);
+        $this->assertSame($history['completed_at'], $yesterday->fresh()->getAttributes()['completed_at']);
+        $this->assertSame('Catatan kemarin.', $yesterday->fresh()->employee_note);
+    }
+
+    public function test_unfinished_yesterday_remains_overdue_alongside_todays_new_task(): void
+    {
+        $this->travelTo('2026-09-05 17:00:00');
+        [$business, $owner] = $this->createBusinessWithOwner();
+        $employee = $this->createEmployee($business);
+        $task = Task::factory()->daily()->for($business)->for($owner, 'creator')->create(['starts_on' => '2026-09-05']);
+        $task->assignees()->attach($employee);
+        $yesterday = TaskOccurrence::factory()->inProgress()->for($task)->for($employee, 'assignee')->create([
+            'occurrence_date' => '2026-09-05', 'due_at' => '2026-09-05 23:59:00',
+        ]);
+
+        $this->actingAs($employee)->withSession(['active_employee_business_id' => $business->id])
+            ->get(route('employee.dashboard'))
+            ->assertViewHas('taskGroups', fn ($groups) => $groups['overdue']->contains($yesterday) && $groups['new']->count() === 1);
+
+        $this->assertSame(TaskOccurrenceStatus::InProgress, $yesterday->fresh()->status);
+    }
+
+    public function test_todays_daily_task_is_visible_even_with_more_than_one_hundred_old_occurrences(): void
+    {
+        $this->travelTo('2026-09-05 17:00:00');
+        [$business, $owner] = $this->createBusinessWithOwner();
+        $employee = $this->createEmployee($business);
+        $task = Task::factory()->daily()->for($business)->for($owner, 'creator')->create(['starts_on' => '2026-01-01']);
+        $task->assignees()->attach($employee);
+        TaskOccurrence::factory()->count(101)->for($task)->for($employee, 'assignee')
+            ->sequence(fn ($sequence) => [
+                'occurrence_date' => today()->subDays($sequence->index + 1),
+                'due_at' => today()->subDays($sequence->index + 1)->setTime(17, 0),
+            ])->create();
+
+        $this->actingAs($employee)->withSession(['active_employee_business_id' => $business->id])
+            ->get(route('employee.dashboard'))
+            ->assertViewHas('taskGroups', fn ($groups) => $groups['new']->count() === 1
+                && $groups['new']->first()->occurrence_date->toDateString() === '2026-09-06');
+    }
+
     /** @return array{Business, User} */
     private function createBusinessWithOwner(): array
     {

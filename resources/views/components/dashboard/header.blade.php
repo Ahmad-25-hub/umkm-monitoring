@@ -5,6 +5,7 @@
     $pageTitle = match (true) {
         request()->routeIs('profile.*') => 'Profil Saya',
         request()->routeIs('account.*') => 'Pengaturan Akun',
+        request()->routeIs('ai-insight.*') => 'AI Insight',
         request()->routeIs('sales.*') => 'Penjualan',
         request()->routeIs('tasks.*') => 'Manajemen tugas',
         request()->routeIs('task-occurrences.*') => 'Monitoring tugas',

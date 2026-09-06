@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Foundation\DevCommands;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -23,9 +25,18 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        DevCommands::artisan('schedule:work --no-interaction', 'scheduler');
+
         Password::defaults(
             fn (): Password => Password::min(8)->mixedCase()->numbers(),
         );
+
+        RateLimiter::for('ai-insight', fn (Request $request): array => [
+            Limit::perMinute(6)->by('ai-insight:user:'.$request->user()?->getAuthIdentifier())
+                ->response(fn (): JsonResponse => response()->json(['message' => 'Terlalu banyak pertanyaan. Tunggu sebentar lalu coba lagi.'], 429)),
+            Limit::perMinute(15)->by('ai-insight:shared')
+                ->response(fn (): JsonResponse => response()->json(['message' => 'Asisten sedang melayani banyak pertanyaan. Coba lagi sebentar.'], 429)),
+        ]);
 
         RateLimiter::for(
             'account-sensitive',

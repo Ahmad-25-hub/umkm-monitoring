@@ -57,7 +57,7 @@ class UpdateTaskAction
             if ($lockedTask->is_active) {
                 $generationDate = $lockedTask->type === TaskType::OneTime
                     ? $lockedTask->starts_on
-                    : today();
+                    : today(Task::TIMEZONE);
                 $this->generateOccurrences->executeForTask($lockedTask, $generationDate);
             }
 

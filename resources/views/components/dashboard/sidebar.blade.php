@@ -1,6 +1,7 @@
 @php
     $primaryNavigation = [
         ['label' => 'Ringkasan', 'icon' => 'layout-dashboard', 'route' => 'overview', 'active' => request()->routeIs('overview')],
+        ['label' => 'AI Insight', 'icon' => 'sparkles', 'route' => 'ai-insight.index', 'active' => request()->routeIs('ai-insight.*')],
         ['label' => 'Penjualan', 'icon' => 'chart-no-axes-combined', 'route' => 'sales.index', 'active' => request()->routeIs('sales.*')],
         ['label' => 'Tugas', 'icon' => 'activity', 'route' => 'tasks.index', 'active' => request()->routeIs('tasks.*')],
         ['label' => 'Monitoring Tugas', 'icon' => 'user-round-check', 'route' => 'task-occurrences.index', 'active' => request()->routeIs('task-occurrences.*')],

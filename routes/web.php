@@ -17,6 +17,7 @@ use App\Http\Controllers\Employee\BusinessMembershipController as EmployeeBusine
 use App\Http\Controllers\Employee\DashboardController as EmployeeDashboardController;
 use App\Http\Controllers\Employee\SalesImportController;
 use App\Http\Controllers\Employee\TaskOccurrenceProgressController;
+use App\Http\Controllers\Owner\AiInsightController;
 use App\Http\Controllers\Owner\SalesController;
 use App\Http\Controllers\Owner\TaskController;
 use App\Http\Controllers\Owner\TaskOccurrenceController;
@@ -74,6 +75,14 @@ Route::middleware('auth')->group(function (): void {
         ->name('overview');
 
     Route::middleware('active.business')->group(function (): void {
+        Route::get('/ai-insight', [AiInsightController::class, 'index'])->name('ai-insight.index');
+        Route::post('/ai-insight', [AiInsightController::class, 'store'])
+            ->middleware('throttle:ai-insight')
+            ->block(40, 1)
+            ->name('ai-insight.store');
+        Route::delete('/ai-insight', [AiInsightController::class, 'destroy'])
+            ->block(40, 1)
+            ->name('ai-insight.destroy');
         Route::get('/sales', SalesController::class)->name('sales.index');
         Route::resource('tasks', TaskController::class)->except(['show', 'destroy']);
         Route::get('/task-monitoring', TaskOccurrenceController::class)->name('task-occurrences.index');

@@ -66,21 +66,22 @@
         <div class="border-b border-line-soft pb-5">
             <p class="section-kicker">Jadwal</p>
             <h2 id="task-schedule-heading" class="mt-2 text-xl font-semibold text-ink">Kapan tugas berlaku?</h2>
+            <p class="mt-2 text-sm leading-6 text-ink-muted">Tugas harian dimulai lagi dengan status Belum dikerjakan setiap pukul 00.00 WIB selama jadwal aktif. Progres dan catatan hari sebelumnya tetap tersimpan.</p>
         </div>
 
         <div class="mt-6 grid gap-5 sm:grid-cols-2">
             <label class="grid gap-2 text-sm font-semibold text-ink">
                 Tanggal mulai
-                <input type="date" name="starts_on" value="{{ old('starts_on', isset($task) ? $task->starts_on->format('Y-m-d') : today()->format('Y-m-d')) }}" required class="rounded-xl border border-line-soft bg-white px-4 py-3 font-normal outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-100">
+                <input type="date" name="starts_on" value="{{ old('starts_on', isset($task) ? $task->starts_on->format('Y-m-d') : today(\App\Models\Task::TIMEZONE)->format('Y-m-d')) }}" required class="rounded-xl border border-line-soft bg-white px-4 py-3 font-normal outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-100">
             </label>
 
             <label class="grid gap-2 text-sm font-semibold text-ink" data-one-time-field>
-                Tenggat tugas
+                Tenggat tugas (WIB)
                 <input type="datetime-local" name="due_at" value="{{ old('due_at', isset($task) && $task->due_at ? $task->due_at->format('Y-m-d\TH:i') : '') }}" class="rounded-xl border border-line-soft bg-white px-4 py-3 font-normal outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-100">
             </label>
 
             <label class="grid gap-2 text-sm font-semibold text-ink" data-daily-field>
-                Jam tenggat harian
+                Jam tenggat harian (WIB)
                 <input type="time" name="daily_due_time" value="{{ old('daily_due_time', isset($task) ? substr((string) $task->daily_due_time, 0, 5) : '17:00') }}" class="rounded-xl border border-line-soft bg-white px-4 py-3 font-normal outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-100">
             </label>
 

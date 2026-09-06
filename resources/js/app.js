@@ -1,3 +1,5 @@
+import { initializeAiInsight } from './ai-insight';
+
 import {
     Activity,
     ArrowRight,
@@ -651,6 +653,7 @@ const initializeAiSuggestions = () => {
     document.querySelectorAll('[data-ai-suggestion]').forEach((button) => {
         button.addEventListener('click', () => {
             input.value = button.dataset.aiSuggestion;
+            input.dispatchEvent(new Event('input'));
             input.focus();
         });
     });
@@ -700,6 +703,49 @@ const initializeTaskForm = () => {
     updateScheduleFields();
 };
 
+
+const initializeDailyTaskReset = () => {
+    const workspace = document.querySelector('[data-daily-reset-at]');
+    const resetAt = Date.parse(workspace?.dataset.dailyResetAt);
+
+    if (! Number.isFinite(resetAt)) {
+        return;
+    }
+
+    const hasUnsavedWork = () => [...document.querySelectorAll('form')].some((form) =>
+        form.getAttribute('aria-busy') === 'true'
+        || [...form.querySelectorAll('textarea, input, select')].some((field) => {
+            if (field.type === 'file') {
+                return field.files.length > 0;
+            }
+            if (field.type === 'checkbox' || field.type === 'radio') {
+                return field.checked !== field.defaultChecked;
+            }
+            if (field.tagName === 'SELECT') {
+                const defaultOption = [...field.options].find((option) => option.defaultSelected) ?? field.options[0];
+                return field.value !== defaultOption?.value;
+            }
+
+            return field.value !== field.defaultValue || (field.tagName === 'TEXTAREA' && field.value.trim() !== '');
+        })
+    );
+    const refresh = () => {
+        if (Date.now() < resetAt || document.visibilityState === 'hidden') {
+            return;
+        }
+
+        if (hasUnsavedWork()) {
+            workspace.querySelector('[data-daily-reset-notice]').hidden = false;
+            return;
+        }
+
+        window.location.reload();
+    };
+
+    window.setTimeout(refresh, Math.max(0, resetAt - Date.now()) + 1000);
+    document.addEventListener('visibilitychange', refresh);
+    window.addEventListener('pageshow', refresh);
+};
 
 const initializeTaskWorkspace = () => {
     const workspace = document.querySelector('[data-task-workspace]');
@@ -817,9 +863,11 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeSparklines();
     initializeSalesChart();
     initializeAiSuggestions();
+    initializeAiInsight();
     initializeInvitationCodeCopy();
     initializeTaskForm();
     initializeTaskWorkspace();
+    initializeDailyTaskReset();
     initializeSectionNavigation();
     initializeSalesUpload();
 });

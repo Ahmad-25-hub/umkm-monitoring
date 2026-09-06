@@ -1,10 +1,11 @@
 <x-dashboard.app-shell :owner="$owner" :businesses="$businesses" :active-business-id="$activeBusinessId">
-    <div class="dashboard-sections">
+    <div class="dashboard-sections" data-daily-reset-at="{{ $nextDailyResetAt }}">
+        <div class="feedback-success" role="status" data-daily-reset-notice hidden>Hari sudah berganti. Muat ulang halaman untuk melihat progres tugas hari ini.</div>
         <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
                 <p class="section-kicker">Manajemen tugas</p>
                 <h1 class="mt-2 text-3xl font-semibold tracking-[-0.04em] text-ink">Monitoring progres</h1>
-                <p class="mt-2 text-sm leading-6 text-ink-muted">Lihat progres, tenggat, dan catatan pekerjaan setiap anggota tim.</p>
+                <p class="mt-2 text-sm leading-6 text-ink-muted">Tugas harian dimulai lagi pukul 00.00 WIB. Lihat progres per tanggal tanpa kehilangan riwayat sebelumnya.</p>
             </div>
             <a href="{{ route('tasks.index') }}" class="inline-flex items-center justify-center rounded-xl border border-line-soft bg-white px-4 py-2.5 text-sm font-semibold text-ink transition hover:bg-canvas">Kembali ke tugas</a>
         </header>
@@ -79,7 +80,7 @@
                                     <p class="mt-1 text-xs text-ink-faint">{{ $occurrence->assignee->email }}</p>
                                 </td>
                                 <td data-label="Tanggal" class="px-5 py-4 text-ink-muted">{{ $occurrence->occurrence_date->format('d M Y') }}</td>
-                                <td data-label="Tenggat" class="px-5 py-4 text-ink-muted">{{ $occurrence->due_at->format('d M Y, H:i') }}</td>
+                                <td data-label="Tenggat" class="px-5 py-4 text-ink-muted">{{ $occurrence->due_at->format('d M Y, H:i') }} WIB</td>
                                 <td data-label="Status" class="px-5 py-4">
                                     <span @class([
                                         'inline-flex rounded-full px-2.5 py-1 text-xs font-semibold',

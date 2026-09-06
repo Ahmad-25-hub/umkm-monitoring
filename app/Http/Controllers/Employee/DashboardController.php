@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Employee;
 
 use App\Actions\BuildSalesDashboardStatisticsAction;
+use App\Actions\GenerateTaskOccurrencesAction;
 use App\Http\Controllers\Controller;
 use App\Models\Business;
+use App\Models\Task;
 use App\Models\TaskOccurrence;
 use App\Models\User;
 use App\TaskOccurrenceStatus;
@@ -14,12 +16,16 @@ use Illuminate\Support\Str;
 
 class DashboardController extends Controller
 {
-    public function __invoke(Request $request, BuildSalesDashboardStatisticsAction $buildSalesStatistics): View
+    public function __invoke(Request $request, BuildSalesDashboardStatisticsAction $buildSalesStatistics, GenerateTaskOccurrencesAction $generateOccurrences): View
     {
         /** @var User $employee */
         $employee = $request->user();
         /** @var Business $business */
         $business = $request->attributes->get('activeEmployeeBusiness');
+
+        $taskDay = today(Task::TIMEZONE);
+        $taskDate = $taskDay->toDateString();
+        $generateOccurrences->execute($taskDate, business: $business, assignee: $employee);
 
         $initials = Str::of($employee->name)
             ->squish()
@@ -39,8 +45,9 @@ class DashboardController extends Controller
                     ->orWhere('completed_at', '>=', now()->subDays(7));
             })
             ->with(['task:id,business_id,created_by_user_id,type', 'task.creator:id,name'])
+            ->orderByRaw('CASE WHEN occurrence_date = ? THEN 0 ELSE 1 END', [$taskDate])
             ->orderByRaw('CASE WHEN due_at < ? AND status NOT IN (?, ?) THEN 0 ELSE 1 END', [
-                now(),
+                now(Task::TIMEZONE),
                 TaskOccurrenceStatus::Completed->value,
                 TaskOccurrenceStatus::Cancelled->value,
             ])
@@ -51,7 +58,7 @@ class DashboardController extends Controller
 
         $taskGroups = [
             'new' => $occurrences->filter(fn (TaskOccurrence $occurrence): bool => $occurrence->status === TaskOccurrenceStatus::Pending && $occurrence->viewed_at === null && ! $occurrence->isOverdue()),
-            'today' => $occurrences->filter(fn (TaskOccurrence $occurrence): bool => $occurrence->status === TaskOccurrenceStatus::Pending && $occurrence->viewed_at !== null && $occurrence->occurrence_date->isToday() && ! $occurrence->isOverdue()),
+            'today' => $occurrences->filter(fn (TaskOccurrence $occurrence): bool => $occurrence->status === TaskOccurrenceStatus::Pending && $occurrence->viewed_at !== null && $occurrence->occurrence_date->toDateString() <= $taskDate && ! $occurrence->isOverdue()),
             'in_progress' => $occurrences->filter(fn (TaskOccurrence $occurrence): bool => $occurrence->status === TaskOccurrenceStatus::InProgress && ! $occurrence->isOverdue()),
             'overdue' => $occurrences->filter(fn (TaskOccurrence $occurrence): bool => $occurrence->isOverdue()),
             'completed' => $occurrences->filter(fn (TaskOccurrence $occurrence): bool => $occurrence->status === TaskOccurrenceStatus::Completed),
@@ -71,6 +78,7 @@ class DashboardController extends Controller
             ],
             'business' => $business,
             'taskGroups' => $taskGroups,
+            'nextDailyResetAt' => $taskDay->copy()->addDay()->toIso8601String(),
             'salesStatistics' => $salesStatistics,
         ]);
     }

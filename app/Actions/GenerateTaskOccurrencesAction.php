@@ -2,8 +2,10 @@
 
 namespace App\Actions;
 
+use App\Models\Business;
 use App\Models\Task;
 use App\Models\TaskOccurrence;
+use App\Models\User;
 use App\TaskOccurrenceStatus;
 use App\TaskType;
 use Carbon\CarbonImmutable;
@@ -11,19 +13,21 @@ use DateTimeInterface;
 
 class GenerateTaskOccurrencesAction
 {
-    public function execute(DateTimeInterface|string|null $date = null): int
+    public function execute(DateTimeInterface|string|null $date = null, ?Business $business = null, ?User $assignee = null): int
     {
-        $occurrenceDate = CarbonImmutable::parse($date ?? 'today', config('app.timezone'))->startOfDay();
+        $occurrenceDate = $this->occurrenceDate($date);
         $createdCount = 0;
 
         Task::query()
+            ->when($business !== null, fn ($query) => $query->whereBelongsTo($business))
+            ->when($assignee !== null, fn ($query) => $query->whereHas('assignees', fn ($query) => $query->whereKey($assignee->id)))
             ->where('type', TaskType::Daily->value)
             ->where('is_active', true)
             ->whereDate('starts_on', '<=', $occurrenceDate)
             ->where(function ($query) use ($occurrenceDate): void {
                 $query->whereNull('ends_on')->orWhereDate('ends_on', '>=', $occurrenceDate);
             })
-            ->with('assignees:id')
+            ->with(['assignees' => fn ($query) => $query->select('users.id')->when($assignee !== null, fn ($query) => $query->whereKey($assignee->id))])
             ->chunkById(100, function ($tasks) use ($occurrenceDate, &$createdCount): void {
                 foreach ($tasks as $task) {
                     $createdCount += $this->executeForTask($task, $occurrenceDate);
@@ -35,7 +39,7 @@ class GenerateTaskOccurrencesAction
 
     public function executeForTask(Task $task, DateTimeInterface|string $date): int
     {
-        $occurrenceDate = CarbonImmutable::parse($date, config('app.timezone'))->startOfDay();
+        $occurrenceDate = $this->occurrenceDate($date);
 
         if (! $task->is_active || ! $this->isScheduledFor($task, $occurrenceDate)) {
             return 0;
@@ -61,14 +65,21 @@ class GenerateTaskOccurrencesAction
 
     public function isScheduledFor(Task $task, DateTimeInterface|string $date): bool
     {
-        $occurrenceDate = CarbonImmutable::parse($date, config('app.timezone'))->startOfDay();
+        $occurrenceDate = $this->occurrenceDate($date);
 
         if ($task->type === TaskType::OneTime) {
             return $task->starts_on->isSameDay($occurrenceDate);
         }
 
-        return ! $occurrenceDate->isBefore($task->starts_on)
-            && ($task->ends_on === null || ! $occurrenceDate->isAfter($task->ends_on));
+        return $occurrenceDate->toDateString() >= $task->starts_on->toDateString()
+            && ($task->ends_on === null || $occurrenceDate->toDateString() <= $task->ends_on->toDateString());
+    }
+
+    private function occurrenceDate(DateTimeInterface|string|null $date): CarbonImmutable
+    {
+        return CarbonImmutable::parse($date ?? 'now', Task::TIMEZONE)
+            ->setTimezone(Task::TIMEZONE)
+            ->startOfDay();
     }
 
     public function dueAtFor(Task $task, DateTimeInterface|string $date): CarbonImmutable
@@ -77,11 +88,11 @@ class GenerateTaskOccurrencesAction
             return CarbonImmutable::instance($task->due_at);
         }
 
-        $occurrenceDate = CarbonImmutable::parse($date, config('app.timezone'));
+        $occurrenceDate = $this->occurrenceDate($date);
 
         return CarbonImmutable::parse(
             $occurrenceDate->toDateString().' '.$task->daily_due_time,
-            config('app.timezone'),
+            Task::TIMEZONE,
         );
     }
 }

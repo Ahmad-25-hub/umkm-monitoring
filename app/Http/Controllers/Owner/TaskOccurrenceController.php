@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Owner;
 
 use App\Actions\BuildOwnerNavigationContextAction;
+use App\Actions\GenerateTaskOccurrencesAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Owner\MonitorTaskOccurrencesRequest;
 use App\Models\Business;
 use App\Models\BusinessMembership;
+use App\Models\Task;
 use App\Models\TaskOccurrence;
 use App\TaskOccurrenceStatus;
 use App\TaskPriority;
@@ -14,10 +16,12 @@ use Illuminate\Contracts\View\View;
 
 class TaskOccurrenceController extends Controller
 {
-    public function __invoke(MonitorTaskOccurrencesRequest $request, BuildOwnerNavigationContextAction $navigationContext): View
+    public function __invoke(MonitorTaskOccurrencesRequest $request, BuildOwnerNavigationContextAction $navigationContext, GenerateTaskOccurrencesAction $generateOccurrences): View
     {
         /** @var Business $business */
         $business = $request->attributes->get('activeBusiness');
+        $taskDay = today(Task::TIMEZONE);
+        $generateOccurrences->execute($taskDay, business: $business);
         $filters = $request->validated();
         $query = TaskOccurrence::query()
             ->whereHas('task', fn ($query) => $query->whereBelongsTo($business))
@@ -42,8 +46,9 @@ class TaskOccurrenceController extends Controller
         }
 
         $occurrences = $query
+            ->orderByRaw('CASE WHEN occurrence_date = ? THEN 0 ELSE 1 END', [$taskDay->toDateString()])
             ->orderByRaw('CASE WHEN due_at < ? AND status NOT IN (?, ?) THEN 0 ELSE 1 END', [
-                now(),
+                now(Task::TIMEZONE),
                 TaskOccurrenceStatus::Completed->value,
                 TaskOccurrenceStatus::Cancelled->value,
             ])
@@ -55,10 +60,10 @@ class TaskOccurrenceController extends Controller
         $summary = TaskOccurrence::query()
             ->whereHas('task', fn ($query) => $query->whereBelongsTo($business))
             ->toBase()
-            ->selectRaw('SUM(CASE WHEN status = ? AND due_at >= ? THEN 1 ELSE 0 END) as pending_count', [TaskOccurrenceStatus::Pending->value, now()])
-            ->selectRaw('SUM(CASE WHEN status = ? AND due_at >= ? THEN 1 ELSE 0 END) as in_progress_count', [TaskOccurrenceStatus::InProgress->value, now()])
+            ->selectRaw('SUM(CASE WHEN status = ? AND due_at >= ? THEN 1 ELSE 0 END) as pending_count', [TaskOccurrenceStatus::Pending->value, now(Task::TIMEZONE)])
+            ->selectRaw('SUM(CASE WHEN status = ? AND due_at >= ? THEN 1 ELSE 0 END) as in_progress_count', [TaskOccurrenceStatus::InProgress->value, now(Task::TIMEZONE)])
             ->selectRaw('SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as completed_count', [TaskOccurrenceStatus::Completed->value])
-            ->selectRaw('SUM(CASE WHEN due_at < ? AND status NOT IN (?, ?) THEN 1 ELSE 0 END) as overdue_count', [now(), TaskOccurrenceStatus::Completed->value, TaskOccurrenceStatus::Cancelled->value])
+            ->selectRaw('SUM(CASE WHEN due_at < ? AND status NOT IN (?, ?) THEN 1 ELSE 0 END) as overdue_count', [now(Task::TIMEZONE), TaskOccurrenceStatus::Completed->value, TaskOccurrenceStatus::Cancelled->value])
             ->first();
 
         $employees = $business->memberships()
@@ -75,6 +80,7 @@ class TaskOccurrenceController extends Controller
             'statuses' => TaskOccurrenceStatus::cases(),
             'priorities' => TaskPriority::cases(),
             'filters' => $filters,
+            'nextDailyResetAt' => $taskDay->copy()->addDay()->toIso8601String(),
         ]);
     }
 }

@@ -39,7 +39,7 @@ class CreateTaskAction
             ));
 
             $task->load('assignees:id');
-            $generationDate = $task->type === TaskType::OneTime ? $task->starts_on : today();
+            $generationDate = $task->type === TaskType::OneTime ? $task->starts_on : today(Task::TIMEZONE);
             $this->generateOccurrences->executeForTask($task, $generationDate);
 
             return $task;

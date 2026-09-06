@@ -31,6 +31,8 @@ class Task extends Model
     /** @use HasFactory<TaskFactory> */
     use HasFactory, SoftDeletes;
 
+    public const TIMEZONE = 'Asia/Jakarta';
+
     public function business(): BelongsTo
     {
         return $this->belongsTo(Business::class);

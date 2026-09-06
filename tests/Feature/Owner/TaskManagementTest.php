@@ -234,6 +234,48 @@ class TaskManagementTest extends TestCase
             ->assertDontSeeText('Rahasia tenant lain');
     }
 
+    public function test_owner_monitoring_recovers_today_for_all_assignees_in_active_business_only(): void
+    {
+        $this->travelTo('2026-09-05 17:00:00');
+        [$owner, $business] = $this->createOwner();
+        $employees = [$this->createEmployee($business), $this->createEmployee($business)];
+        $task = Task::factory()->daily()->for($business)->for($owner, 'creator')->create(['starts_on' => '2026-09-06']);
+        $task->assignees()->attach(array_map(fn (User $employee) => $employee->id, $employees));
+        $otherTask = Task::factory()->daily()->create(['starts_on' => '2026-09-06']);
+        $otherTask->assignees()->attach(User::factory()->create());
+
+        $this->actingAs($owner)->withSession(['active_business_id' => $business->id])
+            ->get(route('task-occurrences.index', ['date' => '2026-09-06']))
+            ->assertViewHas('occurrences', fn ($occurrences) => $occurrences->total() === 2)
+            ->assertViewHas('summary', fn ($summary) => (int) $summary->pending_count === 2);
+        $this->get(route('task-occurrences.index'))->assertOk();
+
+        $this->assertDatabaseCount('task_occurrences', 2);
+        $this->assertDatabaseMissing('task_occurrences', ['task_id' => $otherTask->id]);
+    }
+
+    public function test_owner_can_create_and_edit_daily_task_just_after_midnight_jakarta(): void
+    {
+        $this->travelTo('2026-09-05 17:00:00');
+        [$owner, $business] = $this->createOwner();
+        $employee = $this->createEmployee($business);
+        $data = [
+            'title' => 'Packing semua pesanan', 'type' => 'daily', 'priority' => 'normal',
+            'starts_on' => '2026-09-06', 'daily_due_time' => '17:00', 'is_active' => '1',
+            'assignee_ids' => [$employee->id],
+        ];
+
+        $this->actingAs($owner)->withSession(['active_business_id' => $business->id])
+            ->post(route('tasks.store'), $data)->assertRedirectToRoute('tasks.index');
+        $task = Task::query()->sole();
+        $this->assertDatabaseHas('task_occurrences', ['task_id' => $task->id, 'occurrence_date' => '2026-09-06', 'status' => 'pending']);
+        $this->put(route('tasks.update', $task), [...$data, 'daily_due_time' => '18:00'])
+            ->assertRedirectToRoute('tasks.index');
+
+        $this->assertDatabaseCount('task_occurrences', 1);
+        $this->assertDatabaseHas('task_occurrences', ['task_id' => $task->id, 'due_at' => '2026-09-06 18:00:00', 'status' => 'pending']);
+    }
+
     /** @return array{User, Business} */
     private function createOwner(): array
     {

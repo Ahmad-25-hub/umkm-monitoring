@@ -43,7 +43,7 @@ class TaskOccurrence extends Model
     public function scopeOverdue(Builder $query): Builder
     {
         return $query
-            ->where('due_at', '<', now())
+            ->where('due_at', '<', now(Task::TIMEZONE))
             ->whereNotIn('status', [
                 TaskOccurrenceStatus::Completed->value,
                 TaskOccurrenceStatus::Cancelled->value,
@@ -52,7 +52,7 @@ class TaskOccurrence extends Model
 
     public function isOverdue(): bool
     {
-        return $this->due_at->isPast()
+        return $this->due_at->copy()->shiftTimezone(Task::TIMEZONE)->isPast()
             && ! in_array($this->status, [
                 TaskOccurrenceStatus::Completed,
                 TaskOccurrenceStatus::Cancelled,

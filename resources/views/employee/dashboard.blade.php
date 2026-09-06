@@ -10,7 +10,8 @@
             'completed' => ['label' => 'Selesai', 'description' => 'Riwayat penyelesaian dalam tujuh hari terakhir.', 'tone' => 'is-completed'],
         ];
     @endphp
-    <div class="dashboard-sections">
+    <div class="dashboard-sections" data-daily-reset-at="{{ $nextDailyResetAt }}">
+        <div class="feedback-success" role="status" data-daily-reset-notice hidden>Hari sudah berganti. Simpan pekerjaan Anda, lalu muat ulang halaman untuk melihat tugas hari ini.</div>
         @if (session('success'))
             <div class="feedback-success" role="status"><i data-lucide="circle-check" aria-hidden="true"></i>{{ session('success') }}</div>
         @endif
@@ -50,6 +51,7 @@
                 <div><p class="section-kicker">Pekerjaan saya</p><h2 id="employee-tasks-title" class="section-heading">Daftar tugas</h2></div>
                 <span class="section-meta">{{ collect($taskGroups)->sum(fn ($tasks) => $tasks->count()) }} tugas ditampilkan</span>
             </div>
+            <p class="mt-3 text-xs leading-5 text-ink-muted">Tugas harian kembali <strong>Belum dikerjakan</strong> setiap pukul 00.00 WIB. Riwayat dan tugas kemarin yang belum selesai tetap tersimpan.</p>
             <div class="task-toolbar" data-task-filters hidden>
                 <label class="task-search">
                     <i data-lucide="search" aria-hidden="true"></i>
@@ -88,7 +90,10 @@
                                         <div class="min-w-0">
                                             <div class="flex flex-wrap items-center gap-2">
                                                 <span @class(['task-priority', 'is-high' => $occurrence->priority === \App\TaskPriority::High, 'is-normal' => $occurrence->priority === \App\TaskPriority::Normal])>{{ $occurrence->priority->label() }}</span>
-                                                <span class="text-xs text-ink-muted">{{ $occurrence->task->type->label() }}</span>
+                                                <span class="text-xs text-ink-muted">{{ $occurrence->task->type->label() }} · {{ $occurrence->occurrence_date->format('d M Y') }}</span>
+                                                @if ($occurrence->status === \App\TaskOccurrenceStatus::Pending)
+                                                    <span class="text-xs font-medium text-ink-muted">Belum dikerjakan</span>
+                                                @endif
                                                 @if ($occurrence->status === \App\TaskOccurrenceStatus::InProgress && $occurrence->isOverdue())
                                                     <span class="text-xs font-medium text-blue-700">Sedang dikerjakan</span>
                                                 @endif
@@ -98,7 +103,7 @@
                                                 <p class="mt-2 whitespace-pre-line text-sm leading-6 text-ink-muted">{{ $occurrence->description }}</p>
                                             @endif
                                             <div class="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs text-ink-muted">
-                                                <span @class(['inline-flex items-center gap-1.5', 'font-semibold text-red-700' => $occurrence->isOverdue()])><i data-lucide="clock-3" class="h-3.5 w-3.5" aria-hidden="true"></i>Tenggat {{ $occurrence->due_at->format('d M Y, H:i') }}</span>
+                                                <span @class(['inline-flex items-center gap-1.5', 'font-semibold text-red-700' => $occurrence->isOverdue()])><i data-lucide="clock-3" class="h-3.5 w-3.5" aria-hidden="true"></i>Tenggat {{ $occurrence->due_at->format('d M Y, H:i') }} WIB</span>
                                                 <span>Dari {{ $occurrence->task->creator->name }}</span>
                                             </div>
                                             @if ($occurrence->employee_note)
@@ -138,7 +143,7 @@
                                                 </details>
                                             </div>
                                         @else
-                                            <span class="inline-flex items-center gap-2 text-xs font-medium text-brand-700"><i data-lucide="circle-check" class="h-4 w-4" aria-hidden="true"></i>Selesai {{ $occurrence->completed_at?->format('d M, H:i') }}</span>
+                                            <span class="inline-flex items-center gap-2 text-xs font-medium text-brand-700"><i data-lucide="circle-check" class="h-4 w-4" aria-hidden="true"></i>Selesai {{ $occurrence->completed_at?->copy()->timezone(\App\Models\Task::TIMEZONE)->format('d M, H:i') }} WIB</span>
                                         @endif
                                     </article>
                                 @endforeach
