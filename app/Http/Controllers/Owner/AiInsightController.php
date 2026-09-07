@@ -21,7 +21,7 @@ class AiInsightController extends Controller
         return view('dashboard.ai-insight', [
             ...$navigation->execute($request),
             'messages' => $request->session()->get($this->sessionKey($request).'.messages', []),
-            'isConfigured' => filled(config('services.groq.api_key')),
+            'isConfigured' => filled(config('services.groq.api_key')) || ! empty(array_filter((array) config('services.groq.api_keys', []))),
         ]);
     }
 

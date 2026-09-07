@@ -437,6 +437,68 @@ class AiInsightControllerTest extends TestCase
         Http::assertSentCount(6);
     }
 
+    public function test_groq_client_rotates_to_next_api_key_when_rate_limited(): void
+    {
+        config()->set('services.groq.api_keys', ['key-alpha', 'key-beta']);
+        [$owner, $business] = $this->createOwner();
+
+        Http::fake([
+            self::ENDPOINT => function (Request $request) {
+                if ($request->hasHeader('Authorization', 'Bearer key-alpha')) {
+                    return Http::response(['error' => 'Rate limit exceeded'], 429);
+                }
+
+                return Http::response($this->reportResponse('nadi_help', ['topic' => 'overview']));
+            },
+        ]);
+
+        $response = $this->ask($owner, $business, 'Halo');
+
+        $response->assertOk();
+        $this->assertStringContainsString('Nadi', $response->json('messages.1.message'));
+        Http::assertSentCount(2);
+
+        $this->ask($owner, $business, 'Halo')->assertOk();
+        Http::assertSentCount(3);
+    }
+
+    public function test_groq_client_exhausts_all_keys_when_all_are_rate_limited(): void
+    {
+        config()->set('services.groq.api_keys', ['key-1', 'key-2']);
+        [$owner, $business] = $this->createOwner();
+
+        Http::fake([
+            self::ENDPOINT => Http::response(['error' => 'Rate limit exceeded'], 429),
+        ]);
+
+        $response = $this->ask($owner, $business, 'Halo');
+
+        $response->assertStatus(429)
+            ->assertJsonPath('message', 'Batas penggunaan AI sedang tercapai. Tunggu sebentar lalu coba lagi.');
+        Http::assertSentCount(2);
+    }
+
+    public function test_groq_client_falls_back_when_first_key_returns_401(): void
+    {
+        config()->set('services.groq.api_keys', ['unauthorized-key', 'valid-key']);
+        [$owner, $business] = $this->createOwner();
+
+        Http::fake([
+            self::ENDPOINT => function (Request $request) {
+                if ($request->hasHeader('Authorization', 'Bearer unauthorized-key')) {
+                    return Http::response(['error' => 'Invalid API Key'], 401);
+                }
+
+                return Http::response($this->reportResponse('nadi_help', ['topic' => 'overview']));
+            },
+        ]);
+
+        $response = $this->ask($owner, $business, 'Halo');
+
+        $response->assertOk();
+        Http::assertSentCount(2);
+    }
+
     private function ask(User $owner, Business $business, string $message): TestResponse
     {
         return $this->actingAs($owner)->withSession(['active_business_id' => $business->id])

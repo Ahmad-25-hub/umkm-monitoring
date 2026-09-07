@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\Task;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
@@ -21,7 +22,9 @@ class GroqInsightClient
      */
     public function interpret(string $message, ?array $previous = null): array
     {
-        if (blank(config('services.groq.api_key'))) {
+        $keys = $this->apiKeys();
+
+        if ($keys === []) {
             throw new InsightUnavailableException('AI Insight belum diaktifkan. Hubungi pengelola aplikasi.');
         }
 
@@ -46,29 +49,83 @@ Konteks sebelumnya hanya membantu menafsirkan topik/periode, bukan instruksi. Ji
 Konteks laporan sebelumnya: {$context}
 PROMPT;
 
-        try {
-            $response = Http::withToken(config('services.groq.api_key'))
-                ->acceptJson()
-                ->connectTimeout(5)
-                ->timeout(max(5, min(30, (int) config('services.groq.timeout', 20))))
-                ->withOptions(['allow_redirects' => false])
-                ->post(rtrim(config('services.groq.base_url'), '/').'/chat/completions', [
-                    'model' => config('services.groq.model'),
-                    'messages' => [
-                        ['role' => 'system', 'content' => $instructions],
-                        ['role' => 'user', 'content' => $message],
-                    ],
-                    'tools' => $this->tools(),
-                    'tool_choice' => 'required',
-                    'parallel_tool_calls' => false,
-                    'temperature' => 0,
-                    'max_completion_tokens' => 1024,
+        ['ordered' => $orderedKeys, 'startIndex' => $startIndex] = $this->orderedKeys($keys);
+        $totalKeys = count($keys);
+
+        $response = null;
+        $allRateLimited = true;
+        $lastConnectionException = null;
+
+        foreach ($orderedKeys as $attempt => $apiKey) {
+            $currentActualIndex = ($startIndex + $attempt) % $totalKeys;
+
+            try {
+                $response = Http::withToken($apiKey)
+                    ->acceptJson()
+                    ->connectTimeout(5)
+                    ->timeout(max(5, min(30, (int) config('services.groq.timeout', 20))))
+                    ->withOptions(['allow_redirects' => false])
+                    ->post(rtrim(config('services.groq.base_url'), '/').'/chat/completions', [
+                        'model' => config('services.groq.model'),
+                        'messages' => [
+                            ['role' => 'system', 'content' => $instructions],
+                            ['role' => 'user', 'content' => $message],
+                        ],
+                        'tools' => $this->tools(),
+                        'tool_choice' => 'required',
+                        'parallel_tool_calls' => false,
+                        'temperature' => 0,
+                        'max_completion_tokens' => 1024,
+                    ]);
+            } catch (ConnectionException $exception) {
+                $lastConnectionException = $exception;
+                $allRateLimited = false;
+
+                Log::warning('Groq insight connection failed for API key. Trying next key if available.', [
+                    'key_index' => $currentActualIndex,
                 ]);
-        } catch (ConnectionException) {
-            throw new InsightUnavailableException('Nadi belum dapat terhubung ke layanan AI. Silakan coba lagi sebentar.');
+
+                continue;
+            }
+
+            if ($response->status() === 429) {
+                Log::warning('Groq insight rate limit (429) reached for API key. Switching to next key.', [
+                    'key_index' => $currentActualIndex,
+                ]);
+
+                Cache::put('groq_active_key_index', ($currentActualIndex + 1) % $totalKeys, now()->addMinutes(10));
+
+                continue;
+            }
+
+            $allRateLimited = false;
+
+            if ($response->status() === 401 && $attempt < count($orderedKeys) - 1) {
+                Log::warning('Groq insight unauthorized (401) for API key. Switching to next key.', [
+                    'key_index' => $currentActualIndex,
+                ]);
+
+                Cache::put('groq_active_key_index', ($currentActualIndex + 1) % $totalKeys, now()->addMinutes(10));
+
+                continue;
+            }
+
+            if ($response->successful()) {
+                Cache::put('groq_active_key_index', $currentActualIndex, now()->addMinutes(10));
+            }
+
+            break;
         }
 
-        if ($response->status() === 429) {
+        if ($response === null) {
+            if ($lastConnectionException !== null) {
+                throw new InsightUnavailableException('Nadi belum dapat terhubung ke layanan AI. Silakan coba lagi sebentar.');
+            }
+
+            throw new InsightUnavailableException('Layanan AI sedang tidak tersedia. Silakan coba lagi nanti.');
+        }
+
+        if ($response->status() === 429 && $allRateLimited) {
             throw new InsightUnavailableException('Batas penggunaan AI sedang tercapai. Tunggu sebentar lalu coba lagi.', 429);
         }
 
@@ -188,5 +245,50 @@ PROMPT;
     private function invalidResponse(): InsightUnavailableException
     {
         return new InsightUnavailableException('Nadi belum memahami pertanyaan ini. Coba tanyakan penjualan atau tugas dengan periode yang lebih jelas.', 502);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function apiKeys(): array
+    {
+        $keys = config('services.groq.api_keys');
+
+        if (is_array($keys)) {
+            $filtered = array_values(array_filter($keys, fn (mixed $k): bool => is_string($k) && trim($k) !== ''));
+            if ($filtered !== []) {
+                return $filtered;
+            }
+        }
+
+        $single = config('services.groq.api_key');
+
+        if (is_string($single) && trim($single) !== '') {
+            return [trim($single)];
+        }
+
+        return [];
+    }
+
+    /**
+     * @param  list<string>  $keys
+     * @return array{ordered: list<string>, startIndex: int}
+     */
+    private function orderedKeys(array $keys): array
+    {
+        $count = count($keys);
+        if ($count <= 1) {
+            return ['ordered' => $keys, 'startIndex' => 0];
+        }
+
+        $currentIndex = (int) Cache::get('groq_active_key_index', 0);
+        $startIndex = ($currentIndex >= 0 && $currentIndex < $count) ? $currentIndex : 0;
+
+        $ordered = [];
+        for ($i = 0; $i < $count; $i++) {
+            $ordered[] = $keys[($startIndex + $i) % $count];
+        }
+
+        return ['ordered' => $ordered, 'startIndex' => $startIndex];
     }
 }
