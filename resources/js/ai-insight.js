@@ -39,14 +39,19 @@ export const initializeAiInsight = () => {
         element.querySelector('[data-message-text]').textContent = entry.message;
         element.querySelector('[data-message-time]').textContent = entry.time + ' WIB';
 
-        if (entry.source) {
-            const link = element.querySelector('[data-message-source]');
-            const url = new URL(entry.source.url, window.location.origin);
+        const sourceContainer = element.querySelector('[data-message-sources]');
+        const sourceTemplate = sourceContainer.querySelector('[data-message-source]').cloneNode(true);
+        sourceContainer.replaceChildren();
+
+        for (const source of (entry.sources ?? (entry.source ? [entry.source] : [])).slice(0, 4)) {
+            const url = new URL(source.url, window.location.origin);
 
             if (url.origin === window.location.origin && ['http:', 'https:'].includes(url.protocol)) {
+                const link = sourceTemplate.cloneNode(true);
                 link.href = url.href;
-                link.textContent = entry.source.label;
+                link.textContent = source.label;
                 link.hidden = false;
+                sourceContainer.append(link);
             }
         }
 

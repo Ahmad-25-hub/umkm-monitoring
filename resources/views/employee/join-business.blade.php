@@ -9,6 +9,9 @@
 @section('contextFooter', 'Kode dapat diperoleh dari pemilik usaha.')
 
 @section('content')
+    @if (session('access_notice'))
+        <p class="mb-5 rounded-xl border border-line bg-white p-4 text-sm text-ink-muted" role="status">{{ session('access_notice') }}</p>
+    @endif
     <div>
         <p class="text-xs font-semibold uppercase tracking-[0.14em] text-brand-700">Halo, {{ $employee->name }}</p>
         <h2 class="mt-3 text-3xl font-semibold tracking-[-0.04em] text-ink">Masukkan Kode Usaha</h2>

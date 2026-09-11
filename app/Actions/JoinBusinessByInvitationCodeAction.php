@@ -32,7 +32,9 @@ class JoinBusinessByInvitationCodeAction
                 }
 
                 if ($membership->status !== BusinessMembership::STATUS_ACTIVE) {
-                    $membership->update(['status' => BusinessMembership::STATUS_ACTIVE]);
+                    throw ValidationException::withMessages([
+                        'business_code' => 'Akses Anda ke usaha ini telah dinonaktifkan. Hubungi pemilik usaha untuk mengaktifkannya kembali.',
+                    ]);
                 }
 
                 return $membership;

@@ -23,13 +23,27 @@ class EnsureActiveEmployeeBusiness
             ->oldest('id')
             ->get();
 
+        $preferredBusinessId = (int) $request->session()->get('active_employee_business_id');
+
+        if ($preferredBusinessId !== 0 && ! $request->isMethodSafe()
+            && ! $activeMemberships->contains('business_id', $preferredBusinessId)
+            && $request->user()->memberships()
+                ->where('business_id', $preferredBusinessId)
+                ->where('role', BusinessMembership::ROLE_EMPLOYEE)
+                ->where('status', BusinessMembership::STATUS_INACTIVE)
+                ->exists()) {
+            abort(403, 'Akses ke usaha ini sudah tidak aktif. Buka kembali dashboard sebelum melanjutkan.');
+        }
+
         if ($activeMemberships->isEmpty()) {
             $request->session()->forget('active_employee_business_id');
 
-            return redirect()->route('employee.business.join.create');
+            return redirect()->route('employee.business.join.create')->with(
+                'access_notice',
+                'Anda tidak memiliki akses karyawan aktif. Jika akses dinonaktifkan, hubungi pemilik usaha untuk mengaktifkannya kembali.',
+            );
         }
 
-        $preferredBusinessId = (int) $request->session()->get('active_employee_business_id');
         $activeMembership = $activeMemberships->first(
             fn (BusinessMembership $membership): bool => $membership->business_id === $preferredBusinessId,
         ) ?? $activeMemberships->first();

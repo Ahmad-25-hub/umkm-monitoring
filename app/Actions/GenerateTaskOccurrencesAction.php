@@ -3,6 +3,7 @@
 namespace App\Actions;
 
 use App\Models\Business;
+use App\Models\BusinessMembership;
 use App\Models\Task;
 use App\Models\TaskOccurrence;
 use App\Models\User;
@@ -47,7 +48,12 @@ class GenerateTaskOccurrencesAction
 
         $task->loadMissing('assignees:id');
         $now = now();
-        $rows = $task->assignees->map(fn ($assignee): array => [
+        $inactiveEmployeeIds = BusinessMembership::query()
+            ->where('business_id', $task->business_id)
+            ->where('role', BusinessMembership::ROLE_EMPLOYEE)
+            ->where('status', BusinessMembership::STATUS_INACTIVE)
+            ->pluck('user_id');
+        $rows = $task->assignees->whereNotIn('id', $inactiveEmployeeIds)->map(fn ($assignee): array => [
             'task_id' => $task->id,
             'user_id' => $assignee->id,
             'occurrence_date' => $occurrenceDate->toDateString(),

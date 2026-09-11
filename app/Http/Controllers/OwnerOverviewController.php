@@ -157,6 +157,7 @@ class OwnerOverviewController extends Controller
                         ->implode('');
 
                     return [
+                        'membershipId' => $membership->id,
                         'name' => $membership->user->name,
                         'initials' => $initials,
                         'email' => $membership->user->email,

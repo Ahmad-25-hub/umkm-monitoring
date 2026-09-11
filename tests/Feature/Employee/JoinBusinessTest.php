@@ -125,7 +125,7 @@ class JoinBusinessTest extends TestCase
         $this->assertSame(BusinessMembership::ROLE_OWNER, $membership->fresh()->role);
     }
 
-    public function test_valid_code_reactivates_an_inactive_employee_without_counting_another_use(): void
+    public function test_valid_code_cannot_reactivate_an_inactive_employee(): void
     {
         $employee = User::factory()->create();
         $business = Business::factory()->create();
@@ -141,8 +141,10 @@ class JoinBusinessTest extends TestCase
             'business_code' => 'REAC-TIVA-TE12',
         ]);
 
-        $response->assertRedirectToRoute('employee.dashboard');
-        $this->assertSame(BusinessMembership::STATUS_ACTIVE, $membership->fresh()->status);
+        $response->assertSessionHasErrors([
+            'business_code' => 'Akses Anda ke usaha ini telah dinonaktifkan. Hubungi pemilik usaha untuk mengaktifkannya kembali.',
+        ]);
+        $this->assertSame(BusinessMembership::STATUS_INACTIVE, $membership->fresh()->status);
         $this->assertSame(1, $invitation->fresh()->uses_count);
     }
 

@@ -12,6 +12,7 @@ use App\Support\GroqInsightClient;
 use App\Support\InsightUnavailableException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class AiInsightController extends Controller
@@ -45,9 +46,15 @@ class AiInsightController extends Controller
         $messages = $request->session()->get($key.'.messages', []);
         $request->session()->put($key.'.messages', array_slice([...$messages, $userMessage, $assistantMessage], -10));
 
-        if (in_array($report['name'], ['sales_summary', 'sales_comparison', 'task_summary'], true)) {
+        if (in_array($report['name'], ['sales_summary', 'sales_comparison', 'task_summary', 'product_ranking', 'product_comparison', 'sales_breakdown', 'employee_performance', 'report_bundle'], true)) {
             $request->session()->put($key.'.context', $report);
         }
+
+        Log::info('AI Insight reports generated.', [
+            'user_id' => $request->user()->id,
+            'business_id' => $business->id,
+            'reports' => $report['name'] === 'report_bundle' ? array_column($report['arguments']['reports'], 'name') : [$report['name']],
+        ]);
 
         return response()->json(['messages' => [$userMessage, $assistantMessage]]);
     }

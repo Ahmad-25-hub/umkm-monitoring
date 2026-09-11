@@ -34,6 +34,9 @@
         <section aria-label="Catatan usaha"><x-dashboard.insight-card :insights="$insights" :loading="$isLoading" /></section>
 
         <section id="team" aria-label="Anggota tim">
+            @error('status')
+                <p class="mb-4 text-sm text-critical" role="alert">{{ $message }}</p>
+            @enderror
             <x-dashboard.employee-performance :employees="$employees" :loading="$isLoading" />
         </section>
         <section id="team-access" aria-label="Undang karyawan">

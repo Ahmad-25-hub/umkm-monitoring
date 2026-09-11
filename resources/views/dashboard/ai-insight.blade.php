@@ -7,7 +7,7 @@
                 <p class="mt-2 max-w-2xl text-sm leading-6 text-ink-muted">Dari penjualan hingga pekerjaan tim, mulai dengan satu pertanyaan.</p>
             </div>
             <span class="inline-flex w-fit items-center gap-2 rounded-full border border-brand-100 bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700">
-                <i data-lucide="sparkles" class="h-3.5 w-3.5" aria-hidden="true"></i> AI Insight · Versi awal
+                <i data-lucide="sparkles" class="h-3.5 w-3.5" aria-hidden="true"></i> AI Insight · Analisis usaha
             </span>
         </header>
 
@@ -22,7 +22,7 @@
                 <div class="flex items-center justify-between gap-3 border-b border-line-soft px-5 py-4">
                     <div class="flex items-center gap-3">
                         <span class="grid h-10 w-10 place-items-center rounded-xl bg-brand-50 text-brand-700"><i data-lucide="sparkles" class="h-5 w-5" aria-hidden="true"></i></span>
-                        <div><h2 class="text-sm font-semibold">Asisten usaha Anda</h2><p class="mt-1 text-xs text-ink-muted">Penjualan & progres tugas</p></div>
+                        <div><h2 class="text-sm font-semibold">Asisten usaha Anda</h2><p class="mt-1 text-xs text-ink-muted">Penjualan, produk & kinerja tugas</p></div>
                     </div>
                     <button type="button" data-ai-clear class="rounded-lg px-3 py-2 text-xs font-semibold text-ink-muted hover:bg-canvas disabled:opacity-50" @disabled(count($messages) === 0)>Chat baru</button>
                 </div>
@@ -31,7 +31,7 @@
                     <div data-ai-empty @if (count($messages) > 0) hidden @endif class="my-auto py-10 text-center">
                         <span class="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl border border-brand-100 bg-brand-50 text-brand-700"><i data-lucide="sparkles" class="h-6 w-6" aria-hidden="true"></i></span>
                         <h3 class="text-lg font-semibold tracking-tight">Apa yang ingin Anda ketahui?</h3>
-                        <p class="mx-auto mt-2 max-w-sm text-sm leading-6 text-ink-muted">Tanyakan penjualan yang tercatat atau pekerjaan tim pada usaha aktif Anda.</p>
+                        <p class="mx-auto mt-2 max-w-sm text-sm leading-6 text-ink-muted">Temukan produk terlaris, pahami tren penjualan, atau periksa kinerja tugas tim pada usaha aktif Anda.</p>
                     </div>
                     @foreach ($messages as $entry)
                         <x-dashboard.ai-message :entry="$entry" />
@@ -59,7 +59,7 @@
                     <p class="section-kicker">Mulai dari sini</p>
                     <h2 class="mt-2 text-base font-semibold">Coba tanyakan</h2>
                     <div class="mt-4 grid gap-2">
-                        @foreach (['Berapa penjualan hari ini?', 'Bandingkan penjualan hari ini dengan kemarin.', 'Siapa yang belum menyelesaikan tugas hari ini?', 'Tugas apa yang terlambat hari ini?'] as $suggestion)
+                        @foreach (['Berapa penjualan hari ini?', 'Bandingkan penjualan hari ini dengan kemarin.', 'Siapa yang belum menyelesaikan tugas hari ini?', 'Tugas apa yang terlambat hari ini?', 'Apa 5 produk terlaris bulan ini?', 'Siapa yang paling tepat waktu menyelesaikan tugas bulan ini?', 'Bandingkan penjualan TikTok dan Shopee bulan ini.', 'Tampilkan produk terlaris dan kinerja karyawan bulan ini.'] as $suggestion)
                             <button type="button" data-ai-suggestion="{{ $suggestion }}" class="rounded-xl border border-line-soft px-3 py-3 text-left text-sm leading-5 text-ink-muted transition hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 disabled:opacity-50" @disabled(! $isConfigured)>{{ $suggestion }}</button>
                         @endforeach
                     </div>
@@ -69,6 +69,8 @@
                     <ul class="mt-3 grid gap-3 text-xs leading-5 text-ink-muted">
                         <li>Jawaban mengikuti data usaha aktif dan tanggal WIB.</li>
                         <li>Penjualan mengikuti impor terakhir. Data yang belum diunggah belum terhitung.</li>
+                        <li>Kinerja karyawan berdasarkan tugas tercatat; absensi, kualitas, dan kesulitan kerja belum dinilai.</li>
+                        <li>Stok, laba, dan prediksi memerlukan pencatatan tambahan. Subtotal produk bukan laba.</li>
                         <li>Pertanyaan di luar fitur Nadi akan diarahkan kembali ke topik usaha.</li>
                         <li>Lima pertanyaan terakhir tersimpan selama sesi ini. Gunakan “Chat baru” untuk menghapusnya.</li>
                     </ul>

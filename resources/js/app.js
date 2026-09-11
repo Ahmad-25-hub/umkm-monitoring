@@ -54,6 +54,7 @@ import {
     Upload,
     UserRound,
     UserRoundCheck,
+    UserRoundX,
     UsersRound,
     X,
 } from 'lucide';
@@ -111,6 +112,7 @@ const icons = {
     Upload,
     UserRound,
     UserRoundCheck,
+    UserRoundX,
     UsersRound,
     X,
 };

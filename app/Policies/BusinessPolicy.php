@@ -27,6 +27,11 @@ class BusinessPolicy
         return $this->activeOwnerResponse($user, $business);
     }
 
+    public function manageEmployees(User $user, Business $business): Response
+    {
+        return $this->activeOwnerResponse($user, $business);
+    }
+
     private function activeOwnerResponse(User $user, Business $business): Response
     {
         $isActiveOwner = $business->memberships()

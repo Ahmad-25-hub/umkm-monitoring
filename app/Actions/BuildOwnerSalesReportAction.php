@@ -11,6 +11,8 @@ use Illuminate\Support\Number;
 
 class BuildOwnerSalesReportAction
 {
+    public function __construct(private BuildProductSalesStatisticsAction $productStatistics) {}
+
     public const PERIODS = [
         '7d' => ['label' => '7 hari', 'days' => 7],
         '30d' => ['label' => '30 hari', 'days' => 30],
@@ -248,27 +250,18 @@ class BuildOwnerSalesReportAction
     /** @return array<int, array<string, mixed>> */
     private function topProducts(Builder $query): array
     {
-        $products = [];
-
-        foreach ($query->select('items')->cursor() as $order) {
-            foreach ($order->items as $item) {
-                $name = trim((string) ($item['product_name'] ?? '')) ?: 'Produk tidak diketahui';
-                $products[$name] ??= ['name' => $name, 'units' => 0, 'revenueValue' => 0];
-                $products[$name]['units'] += (int) ($item['quantity'] ?? 0);
-                $products[$name]['revenueValue'] += (int) ($item['subtotal'] ?? 0);
-            }
-        }
+        $products = array_values($this->productStatistics->execute($query)['products']);
 
         usort(
             $products,
-            fn (array $left, array $right): int => [$right['revenueValue'], $right['units']] <=> [$left['revenueValue'], $left['units']],
+            fn (array $left, array $right): int => [$right['subtotal'], $right['units']] <=> [$left['subtotal'], $left['units']],
         );
 
         return collect(array_slice($products, 0, 5))
             ->map(fn (array $product): array => [
                 'name' => $product['name'],
                 'units' => Number::format($product['units'], locale: 'id'),
-                'revenue' => $this->formatRupiah($product['revenueValue']),
+                'revenue' => $this->formatRupiah($product['subtotal']),
             ])
             ->all();
     }

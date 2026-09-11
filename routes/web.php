@@ -18,6 +18,7 @@ use App\Http\Controllers\Employee\DashboardController as EmployeeDashboardContro
 use App\Http\Controllers\Employee\SalesImportController;
 use App\Http\Controllers\Employee\TaskOccurrenceProgressController;
 use App\Http\Controllers\Owner\AiInsightController;
+use App\Http\Controllers\Owner\EmployeeMembershipController;
 use App\Http\Controllers\Owner\SalesController;
 use App\Http\Controllers\Owner\TaskController;
 use App\Http\Controllers\Owner\TaskOccurrenceController;
@@ -75,6 +76,9 @@ Route::middleware('auth')->group(function (): void {
         ->name('overview');
 
     Route::middleware('active.business')->group(function (): void {
+        Route::patch('/team/memberships/{membership}', [EmployeeMembershipController::class, 'update'])
+            ->middleware('throttle:account-sensitive')
+            ->name('employees.update');
         Route::get('/ai-insight', [AiInsightController::class, 'index'])->name('ai-insight.index');
         Route::post('/ai-insight', [AiInsightController::class, 'store'])
             ->middleware('throttle:ai-insight')

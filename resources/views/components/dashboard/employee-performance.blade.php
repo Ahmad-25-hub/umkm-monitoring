@@ -8,7 +8,7 @@
             <div>
                 <p class="section-kicker">Bekerja bersama</p>
                 <h2 class="panel-title mt-1.5">Anggota tim</h2>
-                <p class="mt-2 text-xs text-ink-muted">Karyawan yang terdaftar pada usaha aktif saat ini.</p>
+                <p class="mt-2 text-xs text-ink-muted">Kelola akses karyawan pada usaha ini. Riwayat tugas dan penjualan tetap tersimpan saat akses dinonaktifkan.</p>
             </div>
             @if (count($employees))
                 <a href="{{ route('task-occurrences.index') }}" class="text-link">Pantau tugas <i data-lucide="arrow-up-right" aria-hidden="true"></i></a>
@@ -34,6 +34,18 @@
                             <span>Tanggal bergabung</span>
                         </div>
                         <span @class(['employee-status', 'is-good' => ! $employee['isActive']])>{{ $employee['status'] }}</span>
+                        <form method="POST" action="{{ route('employees.update', $employee['membershipId']) }}"
+                            class="flex w-full justify-end sm:w-auto"
+                            data-confirm="{{ $employee['isActive'] ? 'Nonaktifkan akses '.$employee['name'].' ke usaha ini? Karyawan tidak dapat membuka dashboard, mengunggah penjualan, atau memperbarui tugas usaha ini.' : 'Aktifkan kembali akses '.$employee['name'].' ke usaha ini?' }}"
+                            data-submit-once>
+                            @csrf
+                            @method('PATCH')
+                            <input type="hidden" name="status" value="{{ $employee['isActive'] ? 'inactive' : 'active' }}">
+                            <button type="submit" class="button-secondary" aria-label="{{ ($employee['isActive'] ? 'Nonaktifkan akses ' : 'Aktifkan kembali akses ').$employee['name'] }}">
+                                <i data-lucide="{{ $employee['isActive'] ? 'user-round-x' : 'user-round-check' }}" aria-hidden="true"></i>
+                                {{ $employee['isActive'] ? 'Nonaktifkan' : 'Aktifkan kembali' }}
+                            </button>
+                        </form>
                     </div>
                 @endforeach
             </div>

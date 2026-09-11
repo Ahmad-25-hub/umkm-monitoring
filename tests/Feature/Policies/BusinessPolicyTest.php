@@ -7,6 +7,7 @@ use App\Models\BusinessMembership;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Gate;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class BusinessPolicyTest extends TestCase
@@ -61,6 +62,41 @@ class BusinessPolicyTest extends TestCase
         $this->assertFalse(Gate::forUser($unrelatedUser)->allows('view', $business));
         $this->assertFalse(Gate::forUser($unrelatedUser)->allows('rotateInvitationCode', $business));
         $this->assertFalse(Gate::forUser($unrelatedUser)->allows('activateForOwner', $business));
+    }
+
+    #[DataProvider('employeeManagementRoles')]
+    public function test_employee_management_requires_an_active_owner(string $role, string $status, bool $allowed): void
+    {
+        [$user, $business] = $this->createMembership(role: $role, status: $status);
+
+        $response = Gate::forUser($user)->inspect('manageEmployees', $business);
+
+        $this->assertSame($allowed, $response->allowed());
+        if (! $allowed) {
+            $this->assertSame(404, $response->status());
+        }
+    }
+
+    public function test_unrelated_user_cannot_manage_employees(): void
+    {
+        [, $business] = $this->createMembership();
+        $user = User::factory()->create();
+
+        $response = Gate::forUser($user)->inspect('manageEmployees', $business);
+
+        $this->assertFalse($response->allowed());
+        $this->assertSame(404, $response->status());
+    }
+
+    /** @return array<string, array{string, string, bool}> */
+    public static function employeeManagementRoles(): array
+    {
+        return [
+            'active owner' => [BusinessMembership::ROLE_OWNER, BusinessMembership::STATUS_ACTIVE, true],
+            'inactive owner' => [BusinessMembership::ROLE_OWNER, BusinessMembership::STATUS_INACTIVE, false],
+            'active employee' => [BusinessMembership::ROLE_EMPLOYEE, BusinessMembership::STATUS_ACTIVE, false],
+            'inactive employee' => [BusinessMembership::ROLE_EMPLOYEE, BusinessMembership::STATUS_INACTIVE, false],
+        ];
     }
 
     /**

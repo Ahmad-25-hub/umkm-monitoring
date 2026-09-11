@@ -10,12 +10,19 @@
 
 @section('content')
     <div>
-        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-brand-700">Portal karyawan</p>
-        <h2 class="mt-3 text-3xl font-semibold tracking-[-0.04em] text-ink">Masuk ke akun karyawan</h2>
-        <p class="mt-3 text-sm leading-6 text-ink-muted">Gunakan email dan password akun Anda. Setelah masuk, Anda akan diminta memasukkan Kode Usaha bila belum menjadi anggota.</p>
+        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-brand-700">Selamat datang kembali</p>
+        <h2 class="mt-3 text-3xl font-semibold tracking-[-0.04em] text-ink">Masuk ke ruang kerja Anda</h2>
+        <p class="mt-3 text-sm leading-6 text-ink-muted">Pilih peran Anda untuk melanjutkan ke ruang kerja yang sesuai.</p>
     </div>
 
-    <form method="POST" action="{{ route('employee.login.store') }}" class="mt-8 flex flex-col gap-5" novalidate>
+    @include('auth.login-role-picker', ['activeRole' => 'employee'])
+
+    <div class="mt-6 flex flex-col gap-1 border-t border-line pt-6">
+        <h3 class="text-base font-semibold text-ink">Masuk ke akun karyawan</h3>
+        <p class="text-sm leading-6 text-ink-muted">Gunakan email dan password pribadi Anda.</p>
+    </div>
+
+    <form method="POST" action="{{ route('employee.login.store') }}" class="mt-5 flex flex-col gap-5" novalidate>
         @csrf
 
         <div class="flex flex-col gap-2">
@@ -27,7 +34,6 @@
                 value="{{ old('email') }}"
                 autocomplete="email"
                 required
-                autofocus
                 @class([
                     'h-12 rounded-xl border bg-white px-4 text-sm text-ink shadow-sm transition placeholder:text-ink-faint focus:border-brand-200 focus:ring-4 focus:ring-brand-100/60',
                     'border-critical' => $errors->has('email'),
@@ -65,19 +71,21 @@
             Ingat saya
         </label>
 
-        <button type="submit" class="inline-flex h-12 items-center justify-center rounded-xl bg-brand-900 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 focus:ring-4 focus:ring-brand-100">
-            Masuk sebagai karyawan
+        <button type="submit" class="inline-flex min-h-12 items-center justify-center gap-3 rounded-xl bg-brand-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 focus:ring-4 focus:ring-brand-100">
+            Masuk sebagai Karyawan
+            <i data-lucide="arrow-right" class="size-4 shrink-0" aria-hidden="true"></i>
         </button>
     </form>
 
-    <div class="mt-7 grid gap-3 text-center text-sm text-ink-muted">
+    <div class="mt-5 flex items-start gap-2.5 rounded-xl bg-brand-50 px-4 py-3 text-xs leading-5 text-brand-900">
+        <i data-lucide="circle-help" class="mt-0.5 size-4 shrink-0" aria-hidden="true"></i>
+        <p>Baru bergabung? Kode Usaha dari pemilik digunakan setelah masuk, jika Anda belum menjadi anggota tim.</p>
+    </div>
+
+    <div class="mt-7 text-center text-sm text-ink-muted">
         <p>
             Belum memiliki akun?
             <a href="{{ route('employee.register') }}" class="font-semibold text-brand-700 hover:text-brand-900">Daftar sebagai karyawan</a>
-        </p>
-        <p>
-            Anda pemilik usaha?
-            <a href="{{ route('login') }}" class="font-semibold text-brand-700 hover:text-brand-900">Masuk ke ruang pemilik</a>
         </p>
     </div>
 @endsection
