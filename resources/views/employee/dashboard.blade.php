@@ -25,7 +25,7 @@
                 <h1 id="employee-dashboard-title" class="mt-3 text-3xl font-semibold tracking-tight text-ink sm:text-4xl">Tugas Anda hari ini.</h1>
                 <p class="mt-3 text-sm leading-6 text-ink-muted">Mulai dari yang paling penting. Setiap progres membantu tim <strong class="font-semibold text-ink">{{ $business->name }}</strong> tetap terarah.</p>
             </div>
-            <a href="#sales-upload" class="button-secondary shrink-0"><i data-lucide="upload" aria-hidden="true"></i>Unggah penjualan</a>
+            <a href="{{ route('employee.sales-entry.create') }}" class="button-secondary shrink-0"><i data-lucide="upload" aria-hidden="true"></i>Tambah penjualan</a>
         </section>
 
         <div class="workday-stats" aria-label="Ringkasan pekerjaan yang ditampilkan">
@@ -162,6 +162,10 @@
         </section>
 
         <section id="sales-upload" aria-labelledby="sales-import-title">
+            <div class="panel mb-5 flex flex-wrap items-center justify-between gap-4 p-5">
+                <div><h2 class="panel-title">Penjualan offline</h2><p class="mt-2 text-sm text-ink-muted">Catat manual atau unggah banyak transaksi melalui template Excel NADI.</p></div>
+                <a href="{{ route('employee.sales-entry.create') }}" class="button-primary">+ Tambah penjualan</a>
+            </div>
             <div class="section-heading-row">
                 <div>
                     <p class="section-kicker">Data penjualan</p>

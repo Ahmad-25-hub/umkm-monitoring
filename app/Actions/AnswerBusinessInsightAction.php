@@ -22,7 +22,7 @@ class AnswerBusinessInsightAction
      * Only validated, allow-listed reports reach this action; the business comes from owner middleware.
      *
      * @param  array{name: string, arguments: array<string, mixed>}  $report
-     * @return array{message: string, source: array{label: string, url: string}|null, sources?: list<array{label: string, url: string}>}
+     * @return array{message: string, source: array{label: string, url: string}|null, sources?: list<array{label: string, url: string}>, analysis_context?: string|null}
      */
     public function execute(Business $business, array $report): array
     {
@@ -32,6 +32,7 @@ class AnswerBusinessInsightAction
 
             return [
                 'message' => implode("\n\n──────────\n\n", array_column($replies, 'message')),
+                'analysis_context' => implode("\n\n", array_map(fn (array $reply): string => $reply['analysis_context'] ?? $reply['message'], $replies)),
                 'source' => $sources[0] ?? null,
                 'sources' => $sources,
             ];
@@ -87,6 +88,12 @@ class AnswerBusinessInsightAction
     {
         $current = $this->salesStatistics($business, $arguments['start_date'], $arguments['end_date'], $arguments['platform'] ?? 'all');
         $previous = $this->salesStatistics($business, $arguments['comparison_start_date'], $arguments['comparison_end_date'], $arguments['platform'] ?? 'all');
+        $lastImport = $business->salesOrders()
+            ->when(($arguments['platform'] ?? 'all') !== 'all', fn (Builder $query): Builder => $query->where('platform', $arguments['platform']))
+            ->latest('last_imported_at')->value('last_imported_at');
+        $hasInsufficientData = $current['transactions'] === 0 || $previous['transactions'] === 0
+            || $lastImport === null
+            || CarbonImmutable::parse($lastImport, 'UTC')->setTimezone(Task::TIMEZONE)->toDateString() < max($arguments['end_date'], $arguments['comparison_end_date']);
         $difference = $current['revenue'] - $previous['revenue'];
         $direction = $difference > 0 ? 'Naik' : ($difference < 0 ? 'Turun' : 'Tetap');
         $change = $previous['revenue'] === 0
@@ -94,16 +101,25 @@ class AnswerBusinessInsightAction
             : 'Perubahan: '.($difference > 0 ? '+' : '').number_format($difference / $previous['revenue'] * 100, 1, ',', '.').'%.';
 
         return [
-            'message' => "Perbandingan penjualan {$business->name} (WIB):\n\n"
+            'message' => ($hasInsufficientData ? "Belum cukup data untuk menyimpulkan penjualan usaha naik atau turun. Lengkapi impor kedua periode terlebih dahulu.\n\n" : '')
+                ."Perbandingan penjualan {$business->name} (WIB):\n\n"
                 .$this->platformNote($arguments)
                 .'• '.$this->periodLabel($arguments['start_date'], $arguments['end_date']).': '.$this->rupiah($current['revenue'])
                 .' dari '.$this->number($current['transactions'])." transaksi.\n"
                 .'• '.$this->periodLabel($arguments['comparison_start_date'], $arguments['comparison_end_date']).': '.$this->rupiah($previous['revenue'])
                 .' dari '.$this->number($previous['transactions'])." transaksi.\n\n"
-                .$direction.' '.$this->rupiah(abs($difference)).'. '.$change."\n"
+                .($hasInsufficientData
+                    ? 'Persentase perubahan tidak dihitung karena ada periode kosong atau impor belum mencakup akhir periode.'
+                    : $direction.' '.$this->rupiah(abs($difference)).'. '.$change)."\n"
                 ."Nilai bersih mengikuti laporan penjualan; pesanan dibatalkan tidak dihitung.\n"
                 .$this->importNote($business, $current['transactions'] === 0 || $previous['transactions'] === 0),
             'source' => $this->salesSource(),
+            'analysis_context' => $hasInsufficientData
+                ? 'Belum cukup data untuk menyimpulkan penjualan usaha naik atau turun. Periode '.$this->periodLabel($arguments['start_date'], $arguments['end_date'])
+                    .' dan '.$this->periodLabel($arguments['comparison_start_date'], $arguments['comparison_end_date'])
+                    .' belum layak dibandingkan karena ada periode tanpa transaksi tercatat atau impor belum mencakup akhir periode. Angka perbandingan sengaja tidak disertakan sebagai bukti tren. '
+                    .$this->importNote($business, true)
+                : null,
         ];
     }
 

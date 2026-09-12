@@ -32,18 +32,37 @@ class AiInsightController extends Controller
         $business = $request->attributes->get('activeBusiness');
         $key = $this->sessionKey($request);
         $message = $request->validated('message');
+        $messages = $request->session()->get($key.'.messages', []);
+        $previous = $request->session()->get($key.'.context');
+        $deadline = microtime(true) + 32;
 
         try {
-            $report = $client->interpret($message, $request->session()->get($key.'.context'));
+            $report = $client->interpret($message, $previous, $messages, $deadline);
+
+            if ($report['name'] === 'continue_conversation') {
+                $report = $previous ?? ['name' => 'nadi_help', 'arguments' => ['topic' => 'overview']];
+            }
+
             $reply = $answer->execute($business, $report);
         } catch (InsightUnavailableException $exception) {
             return response()->json(['message' => $exception->getMessage()], $exception->status);
         }
 
+        if ($report['name'] !== 'decline_question' || ($report['arguments']['reason'] ?? null) === 'clarification') {
+            try {
+                $narrative = $client->compose($message, $report, $reply['analysis_context'] ?? $reply['message'], $messages, $deadline);
+                $reply = [...$reply, 'details' => $reply['message'], 'message' => $narrative];
+            } catch (InsightUnavailableException) {
+                $reply['notice'] = 'Penjelasan Nadi belum tersedia. Berikut laporan datanya; Anda tetap bisa melanjutkan percakapan.';
+                Log::info('AI Insight used report fallback.');
+            }
+        }
+
+        unset($reply['analysis_context']);
+
         $timestamp = now(Task::TIMEZONE)->format('H:i');
         $userMessage = ['role' => 'user', 'message' => $message, 'source' => null, 'time' => $timestamp];
         $assistantMessage = ['role' => 'assistant', ...$reply, 'time' => $timestamp];
-        $messages = $request->session()->get($key.'.messages', []);
         $request->session()->put($key.'.messages', array_slice([...$messages, $userMessage, $assistantMessage], -10));
 
         if (in_array($report['name'], ['sales_summary', 'sales_comparison', 'task_summary', 'product_ranking', 'product_comparison', 'sales_breakdown', 'employee_performance', 'report_bundle'], true)) {

@@ -1,4 +1,5 @@
 import { initializeAiInsight } from './ai-insight';
+import { initializeOfflineSales } from './offline-sales';
 
 import {
     Activity,
@@ -415,8 +416,8 @@ const initializeSensitiveForms = () => {
 
 const prepareCanvas = (canvas) => {
     const bounds = canvas.getBoundingClientRect();
-    const width = Math.max(bounds.width, Number(canvas.getAttribute('width')) || 1);
-    const height = Math.max(bounds.height, Number(canvas.getAttribute('height')) || 1);
+    const width = Math.max(bounds.width, 1);
+    const height = Math.max(bounds.height, 1);
     const ratio = Math.min(window.devicePixelRatio || 1, 2);
 
     canvas.width = Math.round(width * ratio);
@@ -480,7 +481,7 @@ const chartPoints = (values, max, bounds) => values.map((value, index) => [
     bounds.bottom - (value / max) * (bounds.bottom - bounds.top),
 ]);
 
-const renderSalesChart = (canvas, period, hoverIndex = null) => {
+const renderSalesChart = (canvas, period) => {
     const { context, width, height } = prepareCanvas(canvas);
     const bounds = { left: 48, right: width - 46, top: 16, bottom: height - 34 };
     const revenueMax = Math.max(1, Math.ceil(Math.max(...period.revenue) * 1.22));
@@ -503,24 +504,13 @@ const renderSalesChart = (canvas, period, hoverIndex = null) => {
 
         context.fillStyle = '#929c98';
         context.textAlign = 'right';
-        context.fillText(index === 0 ? 'Rp0' : `Rp${Math.round(revenueMax * ratio)}jt`, bounds.left - 9, y);
+        context.fillText(index === 0 ? 'Rp0' : `Rp${(revenueMax * ratio).toLocaleString('id-ID', { maximumFractionDigits: 2 })}jt`, bounds.left - 9, y);
         context.textAlign = 'left';
         context.fillText(Math.round(transactionMax * ratio).toLocaleString('id-ID'), bounds.right + 9, y);
     }
 
     const revenuePoints = chartPoints(period.revenue, revenueMax, bounds);
     const transactionPoints = chartPoints(period.transactions, transactionMax, bounds);
-    const area = context.createLinearGradient(0, bounds.top, 0, bounds.bottom);
-    area.addColorStop(0, 'rgba(47,139,104,.22)');
-    area.addColorStop(1, 'rgba(47,139,104,0)');
-
-    context.beginPath();
-    context.moveTo(revenuePoints[0][0], bounds.bottom);
-    revenuePoints.forEach(([x, y]) => context.lineTo(x, y));
-    context.lineTo(revenuePoints.at(-1)[0], bounds.bottom);
-    context.closePath();
-    context.fillStyle = area;
-    context.fill();
 
     drawLine(context, revenuePoints, '#2f8b68', 2.5);
     drawLine(context, transactionPoints, '#69736f', 1.7, true);
@@ -543,29 +533,6 @@ const renderSalesChart = (canvas, period, hoverIndex = null) => {
         context.fillText(label, x, height - 5);
     });
 
-    if (hoverIndex !== null) {
-        const [hoverX, revenueY] = revenuePoints[hoverIndex];
-        const [, transactionY] = transactionPoints[hoverIndex];
-
-        context.beginPath();
-        context.moveTo(hoverX, bounds.top);
-        context.lineTo(hoverX, bounds.bottom);
-        context.strokeStyle = 'rgba(105,115,111,.24)';
-        context.lineWidth = 1;
-        context.stroke();
-
-        [[revenueY, '#2f8b68'], [transactionY, '#69736f']].forEach(([y, color]) => {
-            context.beginPath();
-            context.arc(hoverX, y, 4, 0, Math.PI * 2);
-            context.fillStyle = '#ffffff';
-            context.fill();
-            context.strokeStyle = color;
-            context.lineWidth = 2.2;
-            context.stroke();
-        });
-    }
-
-    return { bounds, revenuePoints, transactionPoints };
 };
 
 const initializeSalesChart = () => {
@@ -577,11 +544,10 @@ const initializeSalesChart = () => {
 
     const periods = JSON.parse(chart.dataset.periods);
     const canvas = chart.querySelector('[data-sales-canvas]');
-    const tooltip = chart.querySelector('[data-chart-tooltip]');
     const chartToggle = chart.querySelector('[data-chart-toggle]');
     let currentPeriod = chart.dataset.defaultPeriod;
 
-    const render = (hoverIndex = null) => renderSalesChart(canvas, periods[currentPeriod], hoverIndex);
+    const render = () => renderSalesChart(canvas, periods[currentPeriod]);
     const selectPeriod = (key) => {
         currentPeriod = key;
         const period = periods[key];
@@ -594,7 +560,6 @@ const initializeSalesChart = () => {
         chart.querySelector('[data-revenue-change]').textContent = period.revenueChange;
         chart.querySelector('[data-transaction-total]').textContent = period.transactionTotal;
         chart.querySelector('[data-transaction-change]').textContent = period.transactionChange;
-        tooltip.hidden = true;
         render();
     };
 
@@ -607,38 +572,6 @@ const initializeSalesChart = () => {
         chartToggle.setAttribute('aria-expanded', String(expanded));
         chartToggle.querySelector('span').textContent = expanded ? 'Sembunyikan grafik' : 'Lihat grafik lengkap';
         window.requestAnimationFrame(() => render());
-    });
-
-    canvas.addEventListener('pointermove', (event) => {
-        const period = periods[currentPeriod];
-        const bounds = canvas.getBoundingClientRect();
-        const pointerX = event.clientX - bounds.left;
-        const plotLeft = 48;
-        const plotRight = bounds.width - 46;
-
-        if (pointerX < plotLeft || pointerX > plotRight) {
-            tooltip.hidden = true;
-            render();
-            return;
-        }
-
-        const ratio = (pointerX - plotLeft) / Math.max(plotRight - plotLeft, 1);
-        const index = Math.max(0, Math.min(period.labels.length - 1, Math.round(ratio * (period.labels.length - 1))));
-        const state = render(index);
-        const x = state.revenuePoints[index][0];
-        const y = Math.min(state.revenuePoints[index][1], state.transactionPoints[index][1]);
-
-        tooltip.querySelector('[data-tooltip-label]').textContent = period.labels[index];
-        tooltip.querySelector('[data-tooltip-revenue]').textContent = `Rp${period.revenue[index].toLocaleString('id-ID')} jt`;
-        tooltip.querySelector('[data-tooltip-transactions]').textContent = `${period.transactions[index].toLocaleString('id-ID')} transaksi`;
-        tooltip.style.left = `${x}px`;
-        tooltip.style.top = `${Math.max(y, 72)}px`;
-        tooltip.hidden = false;
-    });
-
-    canvas.addEventListener('pointerleave', () => {
-        tooltip.hidden = true;
-        render();
     });
 
     render();
@@ -864,6 +797,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeSensitiveForms();
     initializeSparklines();
     initializeSalesChart();
+    initializeOfflineSales();
     initializeAiSuggestions();
     initializeAiInsight();
     initializeInvitationCodeCopy();

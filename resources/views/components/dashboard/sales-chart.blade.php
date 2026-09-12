@@ -72,11 +72,6 @@
 
             <div class="sales-canvas-wrap" data-chart-region>
                 <canvas data-sales-canvas aria-label="Grafik pendapatan dan transaksi"></canvas>
-                <div class="sales-tooltip" data-chart-tooltip hidden>
-                    <strong data-tooltip-label></strong>
-                    <span><i class="legend-dot legend-dot-revenue"></i><span data-tooltip-revenue></span></span>
-                    <span><i class="legend-dot legend-dot-transactions"></i><span data-tooltip-transactions></span></span>
-                </div>
             </div>
         @else
             <x-dashboard.empty-state

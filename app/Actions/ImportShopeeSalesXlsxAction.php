@@ -4,25 +4,16 @@ namespace App\Actions;
 
 use App\Models\Business;
 use App\Models\User;
+use App\Support\SalesSpreadsheetReader;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use PharData;
-use RecursiveIteratorIterator;
-use SimpleXMLElement;
 use Throwable;
-use XMLReader;
 
 class ImportShopeeSalesXlsxAction
 {
     private const PLATFORM = 'shopee';
-
-    private const MAX_SHARED_STRINGS_BYTES = 50 * 1024 * 1024;
-
-    private const MAX_WORKSHEET_BYTES = 100 * 1024 * 1024;
-
-    private const MAX_WORKSHEETS = 20;
 
     private const REQUIRED_HEADERS = [
         'No. Pesanan',
@@ -35,7 +26,10 @@ class ImportShopeeSalesXlsxAction
         'Total Pembayaran',
     ];
 
-    public function __construct(private PersistImportedSalesOrdersAction $persistImportedSalesOrders) {}
+    public function __construct(
+        private PersistImportedSalesOrdersAction $persistImportedSalesOrders,
+        private SalesSpreadsheetReader $spreadsheetReader,
+    ) {}
 
     /**
      * @return array{row_count: int, order_count: int, new_count: int, updated_count: int}
@@ -44,7 +38,7 @@ class ImportShopeeSalesXlsxAction
      */
     public function execute(Business $business, User $employee, UploadedFile $file): array
     {
-        $rows = $this->readRows($file);
+        $rows = $this->spreadsheetReader->readRows($file, self::REQUIRED_HEADERS, formatError: 'Format file Shopee tidak sesuai. Gunakan file XLSX yang diunduh langsung dari menu Pesanan Shopee Seller.');
         $orders = [];
         $rowCount = 0;
 
@@ -135,319 +129,6 @@ class ImportShopeeSalesXlsxAction
             $rowCount,
             $orders,
         );
-    }
-
-    /**
-     * @return array<int, array<string, string>>
-     *
-     * @throws ValidationException
-     */
-    private function readRows(UploadedFile $file): array
-    {
-        $path = $file->getRealPath();
-
-        if ($path === false || ! is_readable($path)) {
-            throw ValidationException::withMessages([
-                'sales_file' => 'File penjualan tidak dapat dibaca.',
-            ]);
-        }
-
-        $temporaryPath = tempnam(sys_get_temp_dir(), 'shopee-sales-');
-
-        if ($temporaryPath === false) {
-            throw ValidationException::withMessages([
-                'sales_file' => 'File Shopee tidak dapat disiapkan untuk dibaca.',
-            ]);
-        }
-
-        @unlink($temporaryPath);
-        $archivePath = $temporaryPath.'.zip';
-        $archive = null;
-
-        try {
-            if (! copy($path, $archivePath)) {
-                throw ValidationException::withMessages([
-                    'sales_file' => 'File Shopee tidak dapat disiapkan untuk dibaca.',
-                ]);
-            }
-
-            $archive = new PharData($archivePath);
-            $sharedStrings = $this->readSharedStrings($archive);
-            $worksheetPaths = $this->worksheetPaths($archive);
-
-            foreach ($worksheetPaths as $worksheetPath) {
-                $rows = $this->readWorksheet($worksheetPath, $sharedStrings);
-
-                if ($rows !== null) {
-                    return $rows;
-                }
-            }
-
-            throw ValidationException::withMessages([
-                'sales_file' => 'Format file Shopee tidak sesuai. Gunakan file XLSX yang diunduh langsung dari menu Pesanan Shopee Seller.',
-            ]);
-        } catch (ValidationException $exception) {
-            throw $exception;
-        } catch (Throwable) {
-            throw ValidationException::withMessages([
-                'sales_file' => 'File XLSX Shopee rusak atau tidak dapat dibaca.',
-            ]);
-        } finally {
-            unset($archive);
-            @unlink($archivePath);
-        }
-    }
-
-    /**
-     * @return array<int, string>
-     *
-     * @throws ValidationException
-     */
-    private function worksheetPaths(PharData $archive): array
-    {
-        $worksheetPaths = [];
-
-        foreach (new RecursiveIteratorIterator($archive) as $entry) {
-            if ($entry->isDir()) {
-                continue;
-            }
-
-            $entryPath = str_replace('\\', '/', $entry->getPathName());
-
-            if (! preg_match('~/xl/worksheets/[^/]+\.xml$~i', $entryPath)) {
-                continue;
-            }
-
-            if ($entry->getSize() > self::MAX_WORKSHEET_BYTES) {
-                throw ValidationException::withMessages([
-                    'sales_file' => 'Worksheet pada file Shopee terlalu besar untuk diproses.',
-                ]);
-            }
-
-            $worksheetPaths[] = $entryPath;
-
-            if (count($worksheetPaths) > self::MAX_WORKSHEETS) {
-                throw ValidationException::withMessages([
-                    'sales_file' => 'File Shopee memiliki terlalu banyak worksheet.',
-                ]);
-            }
-        }
-
-        natsort($worksheetPaths);
-
-        return array_values($worksheetPaths);
-    }
-
-    /**
-     * @return array<int, string>
-     *
-     * @throws ValidationException
-     */
-    private function readSharedStrings(PharData $archive): array
-    {
-        if (! isset($archive['xl/sharedStrings.xml'])) {
-            return [];
-        }
-
-        $entry = $archive['xl/sharedStrings.xml'];
-
-        if ($entry->getSize() > self::MAX_SHARED_STRINGS_BYTES) {
-            throw ValidationException::withMessages([
-                'sales_file' => 'Tabel teks pada file Shopee terlalu besar untuk diproses.',
-            ]);
-        }
-
-        $reader = new XMLReader;
-
-        if (! @$reader->open($entry->getPathName(), null, LIBXML_NONET | LIBXML_COMPACT)) {
-            throw ValidationException::withMessages([
-                'sales_file' => 'Tabel teks pada file Shopee tidak dapat dibaca.',
-            ]);
-        }
-
-        $strings = [];
-
-        try {
-            while ($reader->read()) {
-                if ($reader->nodeType !== XMLReader::ELEMENT || $reader->localName !== 'si') {
-                    continue;
-                }
-
-                $strings[] = $this->textFromXml($reader->readOuterXml());
-            }
-        } finally {
-            $reader->close();
-        }
-
-        return $strings;
-    }
-
-    /**
-     * @param  array<int, string>  $sharedStrings
-     * @return array<int, array<string, string>>|null
-     *
-     * @throws ValidationException
-     */
-    private function readWorksheet(string $worksheetPath, array $sharedStrings): ?array
-    {
-        $reader = new XMLReader;
-
-        if (! @$reader->open($worksheetPath, null, LIBXML_NONET | LIBXML_COMPACT)) {
-            throw ValidationException::withMessages([
-                'sales_file' => 'Worksheet pada file Shopee tidak dapat dibaca.',
-            ]);
-        }
-
-        $headers = null;
-        $rows = [];
-        $headerCandidates = 0;
-
-        try {
-            while ($reader->read()) {
-                if ($reader->nodeType !== XMLReader::ELEMENT || $reader->localName !== 'row') {
-                    continue;
-                }
-
-                $rowXml = $reader->readOuterXml();
-                $values = $this->valuesFromRowXml($rowXml, $sharedStrings);
-
-                if ($this->isEmptyRow($values)) {
-                    continue;
-                }
-
-                if ($headers === null) {
-                    $candidateHeaders = array_map($this->cleanValue(...), $values);
-                    $headerCandidates++;
-
-                    if (array_diff(self::REQUIRED_HEADERS, $candidateHeaders) === []) {
-                        $headers = $candidateHeaders;
-                    } elseif ($headerCandidates >= 20) {
-                        return null;
-                    }
-
-                    continue;
-                }
-
-                $row = [];
-
-                foreach ($headers as $columnIndex => $header) {
-                    if ($header !== '') {
-                        $row[$header] = $values[$columnIndex] ?? '';
-                    }
-                }
-
-                if (! $this->isEmptyRow($row)) {
-                    $rows[] = $row;
-                }
-            }
-        } finally {
-            $reader->close();
-        }
-
-        return $headers === null ? null : $rows;
-    }
-
-    /**
-     * @param  array<int, string>  $sharedStrings
-     * @return array<int, string>
-     *
-     * @throws ValidationException
-     */
-    private function valuesFromRowXml(string $rowXml, array $sharedStrings): array
-    {
-        $row = simplexml_load_string($rowXml, SimpleXMLElement::class, LIBXML_NONET | LIBXML_COMPACT);
-
-        if ($row === false) {
-            throw ValidationException::withMessages([
-                'sales_file' => 'Salah satu baris pada file Shopee tidak dapat dibaca.',
-            ]);
-        }
-
-        $namespace = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
-        $values = [];
-
-        foreach ($row->children($namespace)->c as $cell) {
-            $reference = (string) $cell->attributes()->r;
-            $columnIndex = $this->columnIndex($reference);
-            $values[$columnIndex] = $this->cellValue($cell, $sharedStrings, $namespace);
-        }
-
-        if ($values === []) {
-            return [];
-        }
-
-        $maximumColumnIndex = max(array_keys($values));
-
-        for ($columnIndex = 0; $columnIndex <= $maximumColumnIndex; $columnIndex++) {
-            $values[$columnIndex] ??= '';
-        }
-
-        ksort($values);
-
-        return array_values($values);
-    }
-
-    /** @param array<int, string> $sharedStrings */
-    private function cellValue(SimpleXMLElement $cell, array $sharedStrings, string $namespace): string
-    {
-        $type = (string) $cell->attributes()->t;
-        $children = $cell->children($namespace);
-
-        if ($type === 'inlineStr') {
-            return $this->textFromElement($cell);
-        }
-
-        $value = (string) $children->v;
-
-        if ($type === 's') {
-            return $sharedStrings[(int) $value] ?? '';
-        }
-
-        if ($type === 'b') {
-            return $value === '1' ? '1' : '0';
-        }
-
-        return $value;
-    }
-
-    private function textFromXml(string $xml): string
-    {
-        $element = simplexml_load_string($xml, SimpleXMLElement::class, LIBXML_NONET | LIBXML_COMPACT);
-
-        if ($element === false) {
-            return '';
-        }
-
-        return $this->textFromElement($element);
-    }
-
-    private function textFromElement(SimpleXMLElement $element): string
-    {
-        $textNodes = $element->xpath('.//*[local-name() = "t"]');
-
-        if ($textNodes === false) {
-            return '';
-        }
-
-        return implode('', array_map(
-            fn (SimpleXMLElement $textNode): string => (string) $textNode,
-            $textNodes,
-        ));
-    }
-
-    private function columnIndex(string $reference): int
-    {
-        if (! preg_match('/^([A-Z]+)/i', $reference, $matches)) {
-            return 0;
-        }
-
-        $index = 0;
-
-        foreach (str_split(Str::upper($matches[1])) as $character) {
-            $index = ($index * 26) + ord($character) - 64;
-        }
-
-        return $index - 1;
     }
 
     private function cleanValue(mixed $value): string

@@ -8,6 +8,7 @@ use App\Models\SalesOrder;
 use App\Models\Task;
 use App\Models\TaskOccurrence;
 use App\Models\User;
+use App\Support\GroqInsightClient;
 use App\TaskOccurrenceStatus;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Http\Client\Request;
@@ -31,6 +32,8 @@ class AiInsightAnalyticsTest extends TestCase
             'model' => 'openai/gpt-oss-20b', 'timeout' => 20,
         ]);
         Http::preventStrayRequests();
+        $this->partialMock(GroqInsightClient::class)->shouldReceive('compose')
+            ->andReturnUsing(fn (string $message, array $report, string $evidence): string => $evidence);
     }
 
     public function test_product_ranking_aggregates_items_and_distinct_orders_without_allocating_order_refunds(): void
@@ -348,7 +351,7 @@ class AiInsightAnalyticsTest extends TestCase
         Http::assertSentInOrder([
             fn (Request $request): bool => str_contains($request['messages'][0]['content'], 'Konteks laporan sebelumnya: null'),
             fn (Request $request): bool => str_contains($request['messages'][0]['content'], '"name":"report_bundle"')
-                && ! str_contains($request->body(), '<script>'),
+                && str_contains($request['messages'][2]['content'], '<script>'),
         ]);
     }
 

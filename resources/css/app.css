@@ -447,11 +447,6 @@
     .sales-canvas-wrap { position: relative; display: none; animation: disclosure-in 220ms ease both; }
     .sales-panel.chart-expanded .sales-canvas-wrap { display: block; }
     .sales-panel.chart-expanded .chart-mobile-toggle svg { transform: rotate(180deg); }
-    .sales-canvas-wrap canvas { cursor: crosshair; }
-    .sales-tooltip { position: absolute; z-index: 5; min-width: 8.5rem; pointer-events: none; border: 1px solid rgba(220,227,223,.9); border-radius: .75rem; background: rgba(255,255,255,.95); padding: .65rem .72rem; box-shadow: var(--shadow-menu); backdrop-filter: blur(10px); transform: translate(-50%, calc(-100% - 12px)); }
-    .sales-tooltip strong { display: block; margin-bottom: .38rem; font-size: .75rem; font-weight: 600; color: var(--color-ink); }
-    .sales-tooltip > span { display: flex; align-items: center; gap: .42rem; margin-top: .24rem; font-size: .75rem; color: var(--color-ink-muted); }
-    .sales-tooltip .legend-dot { display: inline-block; height: .38rem; width: .38rem; margin: 0; }
 
     .notification-center { position: relative; }
     .notification-menu { position: fixed; left: .75rem; right: .75rem; top: calc(var(--topbar-height) - .35rem); z-index: 60; overflow: hidden; border: 1px solid var(--color-line); border-radius: 1rem; background: white; box-shadow: var(--shadow-menu); animation: menu-in 150ms ease-out; }

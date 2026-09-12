@@ -20,9 +20,11 @@ use App\Http\Controllers\Employee\TaskOccurrenceProgressController;
 use App\Http\Controllers\Owner\AiInsightController;
 use App\Http\Controllers\Owner\EmployeeMembershipController;
 use App\Http\Controllers\Owner\SalesController;
+use App\Http\Controllers\Owner\SalesImportController as OwnerSalesImportController;
 use App\Http\Controllers\Owner\TaskController;
 use App\Http\Controllers\Owner\TaskOccurrenceController;
 use App\Http\Controllers\OwnerOverviewController;
+use App\Http\Controllers\SalesEntryController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function (): void {
@@ -88,6 +90,14 @@ Route::middleware('auth')->group(function (): void {
             ->block(40, 1)
             ->name('ai-insight.destroy');
         Route::get('/sales', SalesController::class)->name('sales.index');
+        Route::post('/sales-imports', OwnerSalesImportController::class)->name('sales-imports.store');
+        Route::prefix('sales-entry')->name('sales-entry.')->group(function (): void {
+            Route::get('/', [SalesEntryController::class, 'create'])->name('create');
+            Route::post('/', [SalesEntryController::class, 'store'])->name('store');
+            Route::get('/template', [SalesEntryController::class, 'template'])->name('template');
+            Route::post('/preview', [SalesEntryController::class, 'preview'])->middleware('throttle:10,1')->name('preview');
+            Route::post('/confirm', [SalesEntryController::class, 'confirm'])->name('confirm');
+        });
         Route::resource('tasks', TaskController::class)->except(['show', 'destroy']);
         Route::get('/task-monitoring', TaskOccurrenceController::class)->name('task-occurrences.index');
     });
@@ -108,6 +118,13 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/', EmployeeDashboardController::class)
             ->middleware('active.employee.business')
             ->name('dashboard');
+        Route::prefix('sales-entry')->name('sales-entry.')->middleware('active.employee.business')->group(function (): void {
+            Route::get('/', [SalesEntryController::class, 'create'])->name('create');
+            Route::post('/', [SalesEntryController::class, 'store'])->name('store');
+            Route::get('/template', [SalesEntryController::class, 'template'])->name('template');
+            Route::post('/preview', [SalesEntryController::class, 'preview'])->middleware('throttle:10,1')->name('preview');
+            Route::post('/confirm', [SalesEntryController::class, 'confirm'])->name('confirm');
+        });
         Route::post('/sales-imports', SalesImportController::class)
             ->middleware('active.employee.business')
             ->name('sales-imports.store');

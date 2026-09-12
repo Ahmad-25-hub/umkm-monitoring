@@ -8,6 +8,7 @@ use App\Models\SalesOrder;
 use App\Models\Task;
 use App\Models\TaskOccurrence;
 use App\Models\User;
+use App\Support\GroqInsightClient;
 use App\TaskOccurrenceStatus;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Http\Client\Request;
@@ -33,6 +34,8 @@ class AiInsightControllerTest extends TestCase
             'timeout' => 20,
         ]);
         Http::preventStrayRequests();
+        $this->partialMock(GroqInsightClient::class)->shouldReceive('compose')
+            ->andReturnUsing(fn (string $message, array $report, string $evidence): string => $evidence);
     }
 
     public function test_guest_is_redirected_to_login_and_cannot_send_messages(): void
@@ -139,8 +142,8 @@ class AiInsightControllerTest extends TestCase
 
         $response = $this->ask($owner, $business, 'Bandingkan hari ini dengan kemarin.');
 
-        $this->assertStringContainsString('Persentase perubahan tidak dihitung', $response->json('messages.1.message'));
-        $this->assertStringContainsString('Ada periode tanpa transaksi tercatat', $response->json('messages.1.message'));
+        $this->assertStringContainsString('Persentase perubahan tidak dihitung', $response->json('messages.1.details'));
+        $this->assertStringContainsString('Ada periode tanpa transaksi tercatat', $response->json('messages.1.details'));
         Http::assertSentCount(1);
     }
 

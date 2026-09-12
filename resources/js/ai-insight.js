@@ -37,6 +37,11 @@ export const initializeAiInsight = () => {
         element.dataset.role = entry.role;
         element.querySelector('[data-message-author]').textContent = entry.role === 'user' ? 'Anda' : 'Nadi';
         element.querySelector('[data-message-text]').textContent = entry.message;
+        const notice = element.querySelector('[data-message-notice]');
+        notice.textContent = entry.notice ?? '';
+        notice.hidden = ! entry.notice;
+        element.querySelector('[data-message-details]').hidden = ! entry.details;
+        element.querySelector('[data-message-evidence]').textContent = entry.details ?? '';
         element.querySelector('[data-message-time]').textContent = entry.time + ' WIB';
 
         const sourceContainer = element.querySelector('[data-message-sources]');

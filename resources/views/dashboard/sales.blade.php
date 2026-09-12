@@ -5,6 +5,10 @@
     title="Penjualan — NADI"
 >
     <div class="dashboard-sections">
+        @if (session('success'))
+            <div class="feedback-success" role="status">{{ session('success') }}</div>
+        @endif
+        <div class="flex justify-end"><a href="{{ route('sales-entry.create') }}" class="button-primary">+ Tambah penjualan</a></div>
         <section class="panel panel-feature p-6 sm:p-8" aria-labelledby="sales-title">
             <div class="flex flex-col justify-between gap-6 xl:flex-row xl:items-end">
                 <div class="max-w-2xl">

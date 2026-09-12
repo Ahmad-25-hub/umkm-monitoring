@@ -4,7 +4,7 @@
             <div>
                 <p class="section-kicker">Kenali usaha Anda · {{ $activeBusiness->name }}</p>
                 <h1 class="mt-2 text-3xl font-semibold tracking-tight text-ink">Tanya Nadi</h1>
-                <p class="mt-2 max-w-2xl text-sm leading-6 text-ink-muted">Dari penjualan hingga pekerjaan tim, mulai dengan satu pertanyaan.</p>
+                <p class="mt-2 max-w-2xl text-sm leading-6 text-ink-muted">Bahas kondisi usaha, tentukan prioritas, dan lanjutkan dengan pertanyaan atau ide Anda.</p>
             </div>
             <span class="inline-flex w-fit items-center gap-2 rounded-full border border-brand-100 bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700">
                 <i data-lucide="sparkles" class="h-3.5 w-3.5" aria-hidden="true"></i> AI Insight · Analisis usaha
@@ -59,7 +59,7 @@
                     <p class="section-kicker">Mulai dari sini</p>
                     <h2 class="mt-2 text-base font-semibold">Coba tanyakan</h2>
                     <div class="mt-4 grid gap-2">
-                        @foreach (['Berapa penjualan hari ini?', 'Bandingkan penjualan hari ini dengan kemarin.', 'Siapa yang belum menyelesaikan tugas hari ini?', 'Tugas apa yang terlambat hari ini?', 'Apa 5 produk terlaris bulan ini?', 'Siapa yang paling tepat waktu menyelesaikan tugas bulan ini?', 'Bandingkan penjualan TikTok dan Shopee bulan ini.', 'Tampilkan produk terlaris dan kinerja karyawan bulan ini.'] as $suggestion)
+                        @foreach (['Produk apa yang sebaiknya saya fokuskan bulan ini?', 'Belakangan ini penjualan naik atau turun?', 'Tampilkan produk terlaris dan kinerja karyawan bulan ini.', 'Ada saran dari hasil yang tadi?', 'Bagaimana cara memperbaiki penyelesaian tugas tim?', 'Bandingkan penjualan TikTok dan Shopee bulan ini.'] as $suggestion)
                             <button type="button" data-ai-suggestion="{{ $suggestion }}" class="rounded-xl border border-line-soft px-3 py-3 text-left text-sm leading-5 text-ink-muted transition hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 disabled:opacity-50" @disabled(! $isConfigured)>{{ $suggestion }}</button>
                         @endforeach
                     </div>
@@ -67,11 +67,11 @@
                 <section class="rounded-2xl border border-dashed border-line p-5">
                     <div class="flex items-center gap-2 text-brand-700"><i data-lucide="shield-check" class="h-4 w-4" aria-hidden="true"></i><h2 class="text-sm font-semibold">Tentang jawaban Nadi</h2></div>
                     <ul class="mt-3 grid gap-3 text-xs leading-5 text-ink-muted">
-                        <li>Jawaban mengikuti data usaha aktif dan tanggal WIB.</li>
+                        <li>Nadi membaca ringkasan data usaha aktif dan konteks percakapan untuk memberi penjelasan serta saran.</li>
                         <li>Penjualan mengikuti impor terakhir. Data yang belum diunggah belum terhitung.</li>
                         <li>Kinerja karyawan berdasarkan tugas tercatat; absensi, kualitas, dan kesulitan kerja belum dinilai.</li>
                         <li>Stok, laba, dan prediksi memerlukan pencatatan tambahan. Subtotal produk bukan laba.</li>
-                        <li>Pertanyaan di luar fitur Nadi akan diarahkan kembali ke topik usaha.</li>
+                        <li>Saran adalah bahan pertimbangan. Buka dasar analisis untuk memeriksa angka dan batasan datanya.</li>
                         <li>Lima pertanyaan terakhir tersimpan selama sesi ini. Gunakan “Chat baru” untuk menghapusnya.</li>
                     </ul>
                 </section>

@@ -5,6 +5,7 @@ namespace App\Http\Requests\Employee;
 use App\Models\Business;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreSalesImportRequest extends FormRequest
 {
@@ -13,7 +14,7 @@ class StoreSalesImportRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->attributes->get('activeEmployeeBusiness') instanceof Business;
+        return ($this->attributes->get('activeEmployeeBusiness') ?? $this->attributes->get('activeBusiness')) instanceof Business;
     }
 
     /**
@@ -24,6 +25,7 @@ class StoreSalesImportRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'business_id' => ['sometimes', 'required', 'integer', Rule::in([($this->attributes->get('activeEmployeeBusiness') ?? $this->attributes->get('activeBusiness'))?->id])],
             'sales_file' => ['required', 'file', 'mimes:csv,txt,xlsx', 'extensions:csv,xlsx', 'max:10240'],
         ];
     }
@@ -34,6 +36,7 @@ class StoreSalesImportRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'business_id.in' => 'Usaha aktif berubah. Buka kembali formulir sebelum mengunggah.',
             'sales_file.required' => 'Pilih file pesanan TikTok Seller atau Shopee yang akan diunggah.',
             'sales_file.file' => 'File penjualan tidak dapat dibaca.',
             'sales_file.mimes' => 'File pesanan harus berformat CSV TikTok Seller atau XLSX Shopee.',

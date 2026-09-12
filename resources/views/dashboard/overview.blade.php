@@ -2,6 +2,7 @@
     <div class="dashboard-sections">
         <div class="overview-toolbar">
             <p class="eyebrow"><i data-lucide="calendar-days" class="h-4 w-4" aria-hidden="true"></i>{{ $overview['dateLabel'] }}</p>
+            <a href="{{ route('sales-entry.create') }}" class="button-secondary">+ Tambah penjualan</a>
             <a href="{{ route('tasks.create') }}" class="button-primary"><i data-lucide="plus" aria-hidden="true"></i>Buat tugas</a>
         </div>
 
