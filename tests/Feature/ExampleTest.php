@@ -25,7 +25,7 @@ class ExampleTest extends TestCase
             'ordered_at' => '2026-09-01 05:00:00',
         ]);
 
-        $response = $this->get('/');
+        $response = $this->get(route('overview'));
 
         $response
             ->assertOk()
@@ -43,7 +43,7 @@ class ExampleTest extends TestCase
     {
         $this->actingAsOwner();
 
-        $response = $this->get('/?loading=1');
+        $response = $this->get(route('overview', ['loading' => 1]));
 
         $response
             ->assertOk()
@@ -58,7 +58,7 @@ class ExampleTest extends TestCase
     {
         $this->actingAsOwner();
 
-        $response = $this->get('/?state=empty');
+        $response = $this->get(route('overview', ['state' => 'empty']));
 
         $response
             ->assertOk()

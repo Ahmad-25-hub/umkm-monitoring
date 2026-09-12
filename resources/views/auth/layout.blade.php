@@ -1,5 +1,5 @@
 @php
-    $authHomeUrl = trim($__env->yieldContent('homeUrl')) ?: route('login');
+    $authHomeUrl = trim($__env->yieldContent('homeUrl')) ?: route('home');
 @endphp
 
 <!DOCTYPE html>
@@ -43,6 +43,12 @@
                         <span class="brand-symbol !border-brand-100 !bg-brand-50" aria-hidden="true"><span></span><span></span><span></span></span>
                         <span class="text-base font-semibold tracking-[0.18em] text-brand-900">NADI</span>
                     </a>
+
+                    @if (session('status'))
+                        <div role="status" class="mb-6 rounded-xl border border-brand-100 bg-brand-50 px-4 py-3 text-sm leading-6 text-brand-900">
+                            {{ session('status') }}
+                        </div>
+                    @endif
 
                     @yield('content')
                 </div>

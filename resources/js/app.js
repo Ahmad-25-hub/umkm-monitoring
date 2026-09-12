@@ -1,5 +1,6 @@
 import { initializeAiInsight } from './ai-insight';
 import { initializeOfflineSales } from './offline-sales';
+import { initializeLanding } from './landing';
 
 import {
     Activity,
@@ -788,6 +789,7 @@ window.addEventListener('pageshow', () => {
 
 document.addEventListener('DOMContentLoaded', () => {
     initializeIcons();
+    initializeLanding();
     initializeSidebar();
     initializeSearchShortcut();
     initializeBusinessMenu();

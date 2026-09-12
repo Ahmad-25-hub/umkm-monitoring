@@ -31,6 +31,11 @@ class AppServiceProvider extends ServiceProvider
             fn (): Password => Password::min(8)->mixedCase()->numbers(),
         );
 
+        RateLimiter::for('password-reset-send', fn (Request $request): Limit => Limit::perMinute(5)
+            ->by('password-reset-send:'.$request->ip()));
+        RateLimiter::for('password-reset-verify', fn (Request $request): Limit => Limit::perMinute(15)
+            ->by('password-reset-verify:'.$request->ip()));
+
         RateLimiter::for('ai-insight', fn (Request $request): array => [
             Limit::perMinute(6)->by('ai-insight:user:'.$request->user()?->getAuthIdentifier())
                 ->response(fn (): JsonResponse => response()->json(['message' => 'Terlalu banyak pertanyaan. Tunggu sebentar lalu coba lagi.'], 429)),

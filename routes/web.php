@@ -10,6 +10,9 @@ use App\Http\Controllers\Account\ProfileController;
 use App\Http\Controllers\ActiveBusinessController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\EmployeeAuthenticatedSessionController;
+use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\Auth\PasswordResetOtpController;
+use App\Http\Controllers\Auth\PasswordResetOtpVerificationController;
 use App\Http\Controllers\Auth\RegisteredEmployeeController;
 use App\Http\Controllers\Auth\RegisteredOwnerController;
 use App\Http\Controllers\BusinessInvitationCodeController;
@@ -17,6 +20,7 @@ use App\Http\Controllers\Employee\BusinessMembershipController as EmployeeBusine
 use App\Http\Controllers\Employee\DashboardController as EmployeeDashboardController;
 use App\Http\Controllers\Employee\SalesImportController;
 use App\Http\Controllers\Employee\TaskOccurrenceProgressController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Owner\AiInsightController;
 use App\Http\Controllers\Owner\EmployeeMembershipController;
 use App\Http\Controllers\Owner\SalesController;
@@ -27,7 +31,19 @@ use App\Http\Controllers\OwnerOverviewController;
 use App\Http\Controllers\SalesEntryController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/', HomeController::class)->name('home');
+
 Route::middleware('guest')->group(function (): void {
+    Route::get('/forgot-password', [PasswordResetOtpController::class, 'create'])->name('password.request');
+    Route::post('/forgot-password', [PasswordResetOtpController::class, 'store'])
+        ->middleware('throttle:password-reset-send')->name('password.email');
+    Route::get('/forgot-password/otp', [PasswordResetOtpVerificationController::class, 'create'])->name('password.otp');
+    Route::post('/forgot-password/otp', [PasswordResetOtpVerificationController::class, 'store'])
+        ->middleware('throttle:password-reset-verify')->name('password.otp.verify');
+    Route::get('/reset-password', [NewPasswordController::class, 'create'])->name('password.reset');
+    Route::post('/reset-password', [NewPasswordController::class, 'store'])
+        ->middleware('throttle:password-reset-verify')->name('password.update');
+
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
     Route::post('/login', [AuthenticatedSessionController::class, 'store'])->name('login.store');
 
@@ -73,7 +89,7 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('throttle:account-sensitive')
         ->name('account.sessions.destroy-others');
 
-    Route::get('/', OwnerOverviewController::class)
+    Route::get('/dashboard', OwnerOverviewController::class)
         ->middleware('active.business')
         ->name('overview');
 
